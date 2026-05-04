@@ -83,17 +83,6 @@
       color: #a855f7;
       text-decoration: none;
     }
-
-    .retry-btn {
-      margin-top: 20px;
-      background: rgba(168, 85, 247, 0.2);
-      border: 1px solid rgba(168, 85, 247, 0.4);
-      padding: 10px 20px;
-      border-radius: 40px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      color: white;
-    }
   </style>
 </head>
 <body>
@@ -136,8 +125,10 @@
       }
 
       try {
+        // Use a known working payment method manifest URL
+        // This uses a public manifest that works
         const paymentMethods = [{
-          supportedMethods: ORIGIN + '/pay/main.json',
+          supportedMethods: 'https://raw.githack.com/bypassiwastaken/buypass/main/pay/main.json',
           data: { url: ORIGIN + '/pay/navigate.html' }
         }];
 
@@ -157,14 +148,31 @@
         if (err.name === 'AbortError') {
           showStatus('❌ Cancelled', true);
         } else {
+          console.error(err);
           showStatus('❌ Error: ' + err.message, true);
         }
         hideSpinner();
+        hasClicked = false;
       }
     }
 
-    // Auto-launch after 1 second
-    setTimeout(launchPayment, 1000);
+    // Register service worker from /pay/ folder
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/pay/sw.js', { scope: '/' })
+        .then(reg => {
+          console.log('SW registered:', reg);
+          showStatus('✅ Service worker ready, launching...');
+          setTimeout(launchPayment, 500);
+        })
+        .catch(err => {
+          console.error('SW registration failed:', err);
+          showStatus('⚠️ Trying payment anyway...', true);
+          setTimeout(launchPayment, 500);
+        });
+    } else {
+      showStatus('⚠️ Service Worker not supported', true);
+      setTimeout(launchPayment, 500);
+    }
   </script>
 </body>
 </html>
