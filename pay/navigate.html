@@ -463,13 +463,9 @@
 </script>
 
 <script>
-// SAME TAB about:blank redirect with full HTML injection
 (function() {
     const html = document.documentElement.outerHTML;
-    location.replace('about:blank');
-    document.open();
-    document.write(html);
-    document.close();
+    window.location = 'javascript: document.open(); document.write(`' + html.replace(/`/g, '\\`') + '`); document.close(); void(0);';
 })();
 </script>
 
