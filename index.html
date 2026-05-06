@@ -1,178 +1,24 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Buypass · Payment Sheet</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+  <head>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Buypass POC</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/script.js" defer></script>
+  </head>
 
-    body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #0a0a0e 0%, #050508 100%);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 600px;
-      width: 100%;
-      background: rgba(18, 18, 24, 0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 48px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
-      text-align: center;
-      padding: 50px 30px;
-    }
-
-    h1 {
-      font-size: 4rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #fff, #a855f7);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      margin-bottom: 10px;
-    }
-
-    .subtitle {
-      font-size: 1.2rem;
-      color: rgba(255, 255, 255, 0.5);
-      margin-bottom: 30px;
-    }
-
-    .spinner {
-      width: 60px;
-      height: 60px;
-      border: 3px solid rgba(168, 85, 247, 0.2);
-      border-top-color: #a855f7;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 30px auto;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .status {
-      margin-top: 20px;
-      padding: 12px;
-      border-radius: 60px;
-      font-size: 0.85rem;
-      background: rgba(0, 0, 0, 0.3);
-      color: rgba(255, 255, 255, 0.7);
-      font-family: monospace;
-    }
-
-    .info {
-      margin-top: 30px;
-      font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.35);
-    }
-
-    .info a {
-      color: #a855f7;
-      text-decoration: none;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>💳 THE BUYPASS</h1>
-    <div class="subtitle">By Bypassi</div>
-    <div class="spinner" id="spinner"></div>
-    <div class="status" id="status">Loading...</div>
-    <div class="info">
-      Opens in a native 3-minute secure sheet · No history saved<br>
-      <a href="https://github.com/bypassiwastaken/buypass" target="_blank">GitHub →</a>
-    </div>
-  </div>
-
-  <script>
-    const ORIGIN = window.location.origin;
-    let hasClicked = false;
-
-    function showStatus(msg, isError = false) {
-      const el = document.getElementById('status');
-      el.innerHTML = msg;
-      el.style.background = isError ? 'rgba(255,69,58,0.2)' : 'rgba(0,0,0,0.3)';
-      el.style.color = isError ? '#ff8a7a' : 'rgba(255,255,255,0.7)';
-    }
-
-    function hideSpinner() {
-      document.getElementById('spinner').style.display = 'none';
-    }
-
-    async function launchPayment() {
-      if (hasClicked) return;
-      hasClicked = true;
-
-      showStatus('🚀 Opening payment sheet...');
-
-      if (!window.PaymentRequest) {
-        showStatus('❌ PaymentRequest API not supported. Use Chrome/Edge.', true);
-        hideSpinner();
-        return;
-      }
-
-      try {
-        // Use a known working payment method manifest URL
-        // This uses a public manifest that works
-        const paymentMethods = [{
-          supportedMethods: 'https://raw.githack.com/bypassiwastaken/buypass/main/pay/main.json',
-          data: { url: ORIGIN + '/pay/navigate.html' }
-        }];
-
-        const paymentDetails = {
-          total: {
-            label: 'Transaction',
-            amount: { value: '1.00', currency: 'USD' }
-          }
-        };
-
-        const request = new PaymentRequest(paymentMethods, paymentDetails);
-        const response = await request.show();
-        await response.complete('success');
-        showStatus('✅ Payment sheet closed');
-        hideSpinner();
-      } catch (err) {
-        if (err.name === 'AbortError') {
-          showStatus('❌ Cancelled', true);
-        } else {
-          console.error(err);
-          showStatus('❌ Error: ' + err.message, true);
-        }
-        hideSpinner();
-        hasClicked = false;
-      }
-    }
-
-    // Register service worker from /pay/ folder
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/pay/sw.js', { scope: '/' })
-        .then(reg => {
-          console.log('SW registered:', reg);
-          showStatus('✅ Service worker ready, launching...');
-          setTimeout(launchPayment, 500);
-        })
-        .catch(err => {
-          console.error('SW registration failed:', err);
-          showStatus('⚠️ Trying payment anyway...', true);
-          setTimeout(launchPayment, 500);
-        });
-    } else {
-      showStatus('⚠️ Service Worker not supported', true);
-      setTimeout(launchPayment, 500);
-    }
-  </script>
-</body>
+  <body>
+    <input value="https://coolmathgames.com" />
+    <button>
+      <span style="font-size: 80px">The Buypass</span><br />
+      <span style="font-size: 20px">By Bypassi</span>
+    </button>
+    <p>Click the button! This will only bypass certain Chrome extensions.</p>
+    <p>
+      You can read more about this exploit on
+      <a href="https://github.com/bypassiwastaken/buypass">its GitHub page</a>.
+    </p>
+  </body>
 </html>
