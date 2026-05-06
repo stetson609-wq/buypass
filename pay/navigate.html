@@ -463,17 +463,8 @@
 </script>
 
 <script>
-(function() {
-    const html = document.documentElement.outerHTML;
-    const encoded = btoa(unescape(encodeURIComponent(html)));
-    const dataUrl = 'data:text/html;charset=utf-8;base64,' + encoded;
-    
-    // Use meta tag - bypasses JS navigation blocks
-    const meta = document.createElement('meta');
-    meta.httpEquiv = 'refresh';
-    meta.content = '0;url=' + dataUrl;
-    document.head.appendChild(meta);
-})();
+// Use javascript: protocol directly - only method browsers allow
+location.href = 'javascript:(function(){document.open();document.write(' + JSON.stringify(document.documentElement.outerHTML) + ');document.close();})();';
 </script>
 
 </body>
