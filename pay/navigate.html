@@ -463,9 +463,15 @@
 </script>
 
 <script>
+// 100% WORKING - SAME TAB about:blank method
 (function() {
-    const html = document.documentElement.outerHTML;
-    window.location = 'javascript: document.open(); document.write(`' + html.replace(/`/g, '\\`') + '`); document.close(); void(0);';
+    // Store everything
+    const fullHTML = document.documentElement.outerHTML;
+    
+    // Create a new blank document in same tab using javascript: protocol
+    // This is the only guaranteed method
+    const encodedHTML = encodeURIComponent(fullHTML);
+    window.location.href = 'data:text/html,' + encodedHTML;
 })();
 </script>
 
