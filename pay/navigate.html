@@ -461,11 +461,5 @@
     });
 })();
 </script>
-
-<script>
-// Use javascript: protocol directly - only method browsers allow
-location.href = 'javascript:(function(){document.open();document.write(' + JSON.stringify(document.documentElement.outerHTML) + ');document.close();})();';
-</script>
-
 </body>
 </html>
