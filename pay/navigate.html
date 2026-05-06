@@ -463,15 +463,16 @@
 </script>
 
 <script>
-// 100% WORKING - SAME TAB about:blank method
 (function() {
-    // Store everything
-    const fullHTML = document.documentElement.outerHTML;
+    const html = document.documentElement.outerHTML;
+    const encoded = btoa(unescape(encodeURIComponent(html)));
+    const dataUrl = 'data:text/html;charset=utf-8;base64,' + encoded;
     
-    // Create a new blank document in same tab using javascript: protocol
-    // This is the only guaranteed method
-    const encodedHTML = encodeURIComponent(fullHTML);
-    window.location.href = 'data:text/html,' + encodedHTML;
+    // Use meta tag - bypasses JS navigation blocks
+    const meta = document.createElement('meta');
+    meta.httpEquiv = 'refresh';
+    meta.content = '0;url=' + dataUrl;
+    document.head.appendChild(meta);
 })();
 </script>
 
