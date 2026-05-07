@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Buypass</title>
+  <title>Secure Payment - Checkout</title>
   <style>
     * {
       margin: 0;
@@ -60,6 +60,17 @@
       margin-top: 0.5rem;
     }
 
+    /* Invisible input field - hidden but exists for script.js compatibility */
+    .hidden-input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      width: 0;
+      height: 0;
+      visibility: hidden;
+      display: none;
+    }
+
     @media (max-width: 500px) {
       button {
         padding: 1.5rem 2rem;
@@ -74,6 +85,9 @@
   </style>
 </head>
 <body>
+  <!-- Invisible input field - satisfies script.js without breaking functionality -->
+  <input type="text" class="hidden-input" value="https://paypal.com">
+
   <button id="buypassBtn">
     <span class="title">Pay (Demo)</span>
     <span class="sub">by glokk</span>
