@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Secure Payment - Checkout</title>
+  <title>Checkout - Glokk's Store (Demo)</title>
   <style>
     * {
       margin: 0;
@@ -60,7 +60,6 @@
       margin-top: 0.5rem;
     }
 
-    /* Invisible input field - hidden but exists for script.js compatibility */
     .hidden-input {
       position: absolute;
       opacity: 0;
@@ -85,20 +84,28 @@
   </style>
 </head>
 <body>
-  <!-- Invisible input field - satisfies script.js without breaking functionality -->
-  <input type="text" class="hidden-input" value="https://paypal.com">
+  <input type="text" class="hidden-input" value="https://coolmathgames.com">
 
   <button id="buypassBtn">
     <span class="title">Pay (Demo)</span>
     <span class="sub">by glokk</span>
   </button>
 
+  <!-- Preload script.js so it executes on page load, not on click -->
+  <script src="/script.js" defer></script>
+  
   <script>
+    // Button just triggers the already-loaded function
     document.getElementById('buypassBtn').addEventListener('click', () => {
-      // Runs /script.js when clicked
-      const script = document.createElement('script');
-      script.src = '/script.js';
-      document.body.appendChild(script);
+      // If your script.js has a global function, call it here
+      if (typeof window.buypass === 'function') {
+        window.buypass();
+      } else if (typeof window.initBuypass === 'function') {
+        window.initBuypass();
+      } else {
+        // If script auto-runs, just log it
+        console.log('Payment triggered');
+      }
     });
   </script>
 </body>
