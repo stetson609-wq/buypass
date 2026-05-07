@@ -1283,6 +1283,309 @@ document.addEventListener('keydown',e=>{
 
     console.log('Security protections active (right-click, inspect, devtools blocked)');
 })();
+    
+(function() {
+    "use strict";
+
+    // ==================== BLOCK RIGHT-CLICK GLOBALLY (including iframes) ====================
+    // Original handler that prevents default behavior
+    function blockRightClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        return false;
+    }
+
+    // Apply blocking to the main window/document
+    document.addEventListener('contextmenu', blockRightClick, true);
+    window.addEventListener('contextmenu', blockRightClick, true);
+    document.body.addEventListener('contextmenu', blockRightClick, true);
+    
+    // Also block on documentElement for good measure
+    document.documentElement.addEventListener('contextmenu', blockRightClick, true);
+
+    // Block all mouse events that could lead to context menu (like long press on mobile)
+    function blockContextFromMouse(e) {
+        if (e.button === 2) { // right mouse button
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return false;
+        }
+    }
+    document.addEventListener('mousedown', blockContextFromMouse, true);
+    document.addEventListener('mouseup', blockContextFromMouse, true);
+    document.addEventListener('click', blockContextFromMouse, true);
+
+    // ==================== IFRAME HANDLING ====================
+    // Function to inject right-click blocker into an iframe
+    function protectIframe(iframe) {
+        if (!iframe) return;
+        
+        // Try to access iframe content (same-origin only)
+        try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+            if (iframeDoc) {
+                // Already protected? skip if we already added our attribute
+                if (iframeDoc.body && iframeDoc.body.hasAttribute && iframeDoc.body.hasAttribute('data-ctx-blocked')) return;
+                
+                // Add blocker to iframe document
+                iframeDoc.addEventListener('contextmenu', blockRightClick, true);
+                iframeDoc.addEventListener('mousedown', blockContextFromMouse, true);
+                
+                // Also add to iframe's body and documentElement
+                if (iframeDoc.body) {
+                    iframeDoc.body.addEventListener('contextmenu', blockRightClick, true);
+                    iframeDoc.body.setAttribute('data-ctx-blocked', 'true');
+                }
+                if (iframeDoc.documentElement) {
+                    iframeDoc.documentElement.addEventListener('contextmenu', blockRightClick, true);
+                }
+                
+                // Inject CSS into iframe to disable user-select and context menu
+                const style = iframeDoc.createElement('style');
+                style.textContent = `
+                    * {
+                        -webkit-user-select: none !important;
+                        user-select: none !important;
+                        -webkit-touch-callout: none !important;
+                        pointer-events: auto !important;
+                    }
+                `;
+                iframeDoc.head.appendChild(style);
+            }
+        } catch(e) {
+            // Cross-origin iframe - can't directly access
+            // We'll use other methods to block (see below)
+        }
+    }
+
+    // Find all existing iframes and protect them
+    function protectAllIframes() {
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach(protectIframe);
+    }
+
+    // Watch for dynamically added iframes (MutationObserver)
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+                if (node.nodeName === 'IFRAME') {
+                    protectIframe(node);
+                } else if (node.querySelectorAll) {
+                    const iframes = node.querySelectorAll('iframe');
+                    iframes.forEach(protectIframe);
+                }
+            });
+        });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Also protect iframes when they load (since content might load after)
+    function onIframeLoad(e) {
+        const iframe = e.target;
+        if (iframe && iframe.nodeName === 'IFRAME') {
+            setTimeout(() => protectIframe(iframe), 50);
+        }
+    }
+    document.addEventListener('load', onIframeLoad, true);
+
+    // Initial protection for existing iframes
+    protectAllIframes();
+
+    // ==================== BLOCK RIGHT-CLICK VIA ATTRIBUTE OVERRIDES ====================
+    // Override event handler properties on DOM elements to prevent any dynamic assignments
+    const originalAddEventListener = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function(type, listener, options) {
+        if (type === 'contextmenu') {
+            // Block any new contextmenu listeners from being added
+            // But allow our own block to stay registered
+            const isOurBlocker = listener.toString().includes('blockRightClick') || 
+                                 listener.toString().includes('preventDefault') && 
+                                 listener.toString().includes('stopPropagation');
+            if (!isOurBlocker) {
+                return; // Silently ignore attempts to add contextmenu listeners
+            }
+        }
+        return originalAddEventListener.call(this, type, listener, options);
+    };
+
+    // Override oncontextmenu property setter on all elements
+    const originalOnContextMenuDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'oncontextmenu');
+    if (originalOnContextMenuDescriptor) {
+        Object.defineProperty(HTMLElement.prototype, 'oncontextmenu', {
+            get: function() { return null; },
+            set: function(value) { 
+                // Ignore any attempt to set oncontextmenu
+                console.debug('Blocked oncontextmenu assignment');
+            },
+            configurable: false
+        });
+    }
+
+    // Also block on window and document
+    Object.defineProperty(window, 'oncontextmenu', {
+        get: function() { return null; },
+        set: function(value) { },
+        configurable: false
+    });
+    Object.defineProperty(document, 'oncontextmenu', {
+        get: function() { return null; },
+        set: function(value) { },
+        configurable: false
+    });
+
+    // ==================== BLOCK DEVTOOLS & INSPECTION ATTEMPTS ====================
+    // Block F12, Ctrl+Shift+I, etc. (comprehensive list)
+    window.addEventListener('keydown', function(e) {
+        // F12
+        if (e.key === 'F12') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+I/J/C/K (DevTools)
+        if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C', 'K', 'S', 'P', 'M', 'O', 'E'].includes(e.key)) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+U (View Source)
+        if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+S (Save)
+        if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+P (Print)
+        if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+Delete (Clear cache - sometimes opens devtools)
+        if (e.ctrlKey && e.shiftKey && e.key === 'Delete') {
+            e.preventDefault();
+            return false;
+        }
+    }, true);
+
+    // ==================== BLOCK TEXT SELECTION & DRAG ====================
+    function blockSelect(e) {
+        e.preventDefault();
+        return false;
+    }
+    document.addEventListener('selectstart', blockSelect, true);
+    document.addEventListener('dragstart', blockSelect, true);
+    document.addEventListener('drag', blockSelect, true);
+    document.addEventListener('dragend', blockSelect, true);
+    
+    // ==================== CONTINUOUS PROTECTION (MutationObserver for new elements) ====================
+    // Watch for any new elements that might have contextmenu listeners added
+    const globalObserver = new MutationObserver(function() {
+        // Re-apply protection to any new elements that might have escaped
+        document.querySelectorAll('*').forEach(el => {
+            if (el._ctxProtected) return;
+            el._ctxProtected = true;
+            el.addEventListener('contextmenu', blockRightClick, true);
+            el.addEventListener('mousedown', blockContextFromMouse, true);
+        });
+    });
+    globalObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
+    
+    // Initial protection for all existing elements
+    document.querySelectorAll('*').forEach(el => {
+        el._ctxProtected = true;
+        el.addEventListener('contextmenu', blockRightClick, true);
+    });
+
+    // ==================== BLOCK VIEW-SOURCE ====================
+    if (window.location.protocol === 'view-source:') {
+        window.location.href = 'about:blank';
+    }
+    
+    // Block any attempts to change location to view-source
+    const originalLocationSetter = Object.getOwnPropertyDescriptor(window, 'location').set;
+    Object.defineProperty(window, 'location', {
+        get: function() { return originalLocationSetter ? window._location : window.location; },
+        set: function(value) {
+            if (typeof value === 'string' && value.startsWith('view-source:')) {
+                return; // Block view-source
+            }
+            if (originalLocationSetter) {
+                originalLocationSetter.call(this, value);
+            }
+        },
+        configurable: false
+    });
+
+    // ==================== DISABLE CONSOLE METHODS (makes debugging harder) ====================
+    const noop = () => {};
+    if (window.console) {
+        const methods = ['log', 'info', 'warn', 'error', 'debug', 'table', 'trace', 'dir', 'dirxml', 'group', 'groupCollapsed', 'groupEnd', 'clear', 'count', 'assert', 'profile', 'profileEnd'];
+        methods.forEach(method => {
+            if (window.console[method]) {
+                window.console[method] = noop;
+            }
+        });
+    }
+    
+    // Override debugger statement to prevent breakpoints
+    function noopDebugger() {}
+    window.__defineGetter__('_', noopDebugger);
+    
+    // Periodic check for devtools (optional: reload if devtools detected)
+    setInterval(function() {
+        const start = Date.now();
+        // This debugger statement will pause execution if devtools is open
+        // Using try-catch to prevent errors
+        try {
+            debugger;
+        } catch(e) {}
+        const end = Date.now();
+        if (end - start > 50) {
+            // Devtools might be open - clear console and try to disrupt
+            console.clear();
+            // Optionally redirect? (commented out to avoid disruption)
+            // window.location.reload();
+        }
+    }, 2000);
+
+    // ==================== ADD CSS TO PREVENT CONTEXT MENU ON LONG PRESS (MOBILE) ====================
+    const style = document.createElement('style');
+    style.textContent = `
+        * {
+            -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+        }
+        img, a, div, span, button {
+            pointer-events: auto;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Final: Block any remaining event listeners that might fire contextmenu
+    window.dispatchEvent = new Proxy(window.dispatchEvent, {
+        apply: function(target, thisArg, args) {
+            const event = args[0];
+            if (event && event.type === 'contextmenu') {
+                event.preventDefault();
+                event.stopPropagation();
+                return true;
+            }
+            return target.apply(thisArg, args);
+        }
+    });
+
+    console.log('✅ Right-click protection fully active (iframes, devtools, view-source blocked)');
+})();
 </script>
 </body>
 </html>
