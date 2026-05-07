@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Payment · Secure Checkout</title>
+  <title>Buypass</title>
   <style>
     * {
       margin: 0;
@@ -13,391 +13,79 @@
 
     body {
       min-height: 100vh;
-      background: linear-gradient(135deg, #0a0c10 0%, #0f1117 100%);
+      background: #0a0c10;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-      padding: 1.5rem;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     }
 
-    /* main container – centered, minimal elegance */
-    .payment-wrapper {
-      text-align: center;
-      max-width: 500px;
-      width: 100%;
-    }
-
-    /* subtle card effect */
-    .card-glow {
-      background: rgba(18, 20, 26, 0.6);
-      backdrop-filter: blur(2px);
-      border-radius: 2rem;
-      padding: 2.5rem 2rem;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5);
-    }
-
-    /* heading / badge */
-    .badge-icon {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255, 255, 255, 0.03);
-      padding: 0.4rem 1rem;
-      border-radius: 60px;
-      margin-bottom: 2rem;
-      border: 0.5px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .badge-icon svg {
-      width: 16px;
-      height: 16px;
-      stroke: #9ca3af;
-      stroke-width: 1.5;
-    }
-
-    .badge-icon span {
-      font-size: 0.7rem;
-      font-weight: 500;
-      color: #a1a6b3;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    /* ---- MAIN BUTTON (like a real Google Pay style button) ---- */
-    .payment-btn {
-      width: 100%;
+    button {
       background: #ffffff;
       border: none;
-      border-radius: 56px;
-      padding: 0.9rem 1.8rem;
+      padding: 2.5rem 4rem;
+      border-radius: 2rem;
       cursor: pointer;
       transition: all 0.2s ease;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      font-family: inherit;
+      box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.4);
+      text-align: center;
     }
 
-    .payment-btn:hover {
+    button:hover {
+      transform: scale(1.02);
       background: #f5f7fc;
-      transform: translateY(-2px);
-      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.5);
     }
 
-    .payment-btn:active {
-      transform: translateY(1px);
-      transition: 0.05s;
-    }
-
-    /* button content */
-    .btn-icon svg {
-      width: 22px;
-      height: 22px;
-      stroke: #1f2937;
-      stroke-width: 1.8;
-      fill: none;
-    }
-
-    .btn-text {
-      font-weight: 600;
-      font-size: 1.1rem;
-      letter-spacing: -0.2px;
-      color: #111827;
-    }
-
-    .btn-arrow svg {
-      width: 18px;
-      height: 18px;
-      stroke: #4b5563;
-      stroke-width: 2;
-    }
-
-    /* loading state (when script runs) */
-    .payment-btn.loading {
-      opacity: 0.7;
-      pointer-events: none;
+    button:active {
       transform: scale(0.98);
     }
 
-    .payment-btn.loading .btn-text {
-      opacity: 0.8;
+    .title {
+      font-size: 4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #000000, #1a1a2e);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      display: block;
     }
 
-    /* method row with real icons (no emojis) */
-    .methods-support {
-      display: flex;
-      justify-content: center;
-      gap: 1.2rem;
-      margin-top: 2rem;
-      flex-wrap: wrap;
-    }
-
-    .method-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.02);
-      padding: 5px 12px;
-      border-radius: 40px;
-      border: 0.5px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .method-item svg {
-      width: 13px;
-      height: 13px;
-      stroke: #7a8090;
-      stroke-width: 1.5;
-    }
-
-    .method-item span {
-      font-size: 0.7rem;
-      color: #8c92a0;
-      font-weight: 450;
-    }
-
-    /* secure footer */
-    .secure-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 1.8rem;
-      font-size: 0.7rem;
-      color: #6f7585;
-    }
-
-    .secure-row svg {
-      width: 12px;
-      height: 12px;
-      stroke: #6f7585;
-      stroke-width: 1.7;
-    }
-
-    /* optional toast feedback */
-    .toast-message {
-      position: fixed;
-      bottom: 28px;
-      left: 50%;
-      transform: translateX(-50%) scale(0.96);
-      background: #1e2128;
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 60px;
-      padding: 10px 24px;
-      color: #e2e4e9;
-      font-size: 0.8rem;
+    .sub {
+      font-size: 1.2rem;
       font-weight: 500;
-      font-family: monospace;
-      pointer-events: none;
-      z-index: 1000;
-      opacity: 0;
-      transition: opacity 0.2s, transform 0.2s;
-      white-space: nowrap;
+      color: #4a4f5e;
+      display: block;
+      margin-top: 0.5rem;
     }
 
-    .toast-message.show {
-      opacity: 1;
-      transform: translateX(-50%) scale(1);
-    }
-
-    @media (max-width: 480px) {
-      .card-glow {
-        padding: 2rem 1.2rem;
+    @media (max-width: 500px) {
+      button {
+        padding: 1.5rem 2rem;
       }
-      .btn-text {
-        font-size: 1rem;
+      .title {
+        font-size: 2.2rem;
       }
-      .btn-icon svg {
-        width: 20px;
-        height: 20px;
+      .sub {
+        font-size: 0.9rem;
       }
-      .payment-btn {
-        padding: 0.75rem 1.2rem;
-      }
-    }
-
-    /* disable selection on button for clean look */
-    .payment-btn {
-      user-select: none;
-      -webkit-user-select: none;
     }
   </style>
 </head>
 <body>
-  <div class="payment-wrapper">
-    <div class="card-glow">
-      <!-- header icon (similar to branded pay) -->
-      <div class="badge-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 10h18M6 13h2M10 13h2M14 13h2M18 13h2M12 6v12M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>
-        </svg>
-        <span>Secure checkout (Made by glokk)</span>
-      </div>
-
-      <!-- MAIN BUTTON: center, runs /script.js when clicked. Simple, black/white pay style. -->
-      <button class="payment-btn" id="runScriptBtn">
-        <span class="btn-icon">
-          <svg viewBox="0 0 24 24" stroke="currentColor" fill="none">
-            <rect x="2" y="5" width="20" height="14" rx="2" ry="2" stroke-width="1.7"/>
-            <line x1="2" y1="10" x2="22" y2="10" stroke-width="1.7"/>
-            <circle cx="7" cy="15" r="1.2" fill="currentColor" stroke="none"/>
-            <circle cx="17" cy="15" r="1.2" fill="currentColor" stroke="none"/>
-          </svg>
-        </span>
-        <span class="btn-text">(Demo) Pay now · $0.00</span>
-        <span class="btn-arrow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
-        </span>
-      </button>
-
-      <!-- payment methods (SVG only, no emoji) -->
-      <div class="methods-support">
-        <div class="method-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <rect x="2" y="5" width="20" height="14" rx="2" stroke-width="1.5"/>
-            <line x1="2" y1="10" x2="22" y2="10" stroke-width="1.5"/>
-          </svg>
-          <span>Credit card</span>
-        </div>
-        <div class="method-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M20 10V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3" stroke-width="1.5"/>
-            <path d="M22 14v3a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-3" stroke-width="1.5"/>
-            <circle cx="18" cy="15" r="1" fill="currentColor" stroke="none" fill-opacity="0.8"/>
-          </svg>
-          <span>Google Pay</span>
-        </div>
-        <div class="method-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <rect x="4" y="4" width="16" height="16" rx="2" stroke-width="1.5"/>
-            <path d="M8 8h8M8 12h6M8 16h4" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <span>PayPal</span>
-        </div>
-      </div>
-
-      <!-- secured by badge (lock icon) -->
-      <div class="secure-row">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <rect x="5" y="11" width="14" height="11" rx="2" stroke-width="1.6"/>
-          <path d="M8 11V8a4 4 0 0 1 8 0v3" stroke-width="1.6"/>
-          <circle cx="12" cy="16" r="1.2" fill="currentColor" stroke="none"/>
-        </svg>
-        <span>SSL encrypted · PCI compliant</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- tiny toast (optional but clean feedback) -->
-  <div id="actionToast" class="toast-message">⟳ Opening payment request...</div>
+  <button id="buypassBtn">
+    <span class="title">Pay (Demo)</span>
+    <span class="sub">by glokk</span>
+  </button>
 
   <script>
-    (function() {
-      'use strict';
-
-      // ------------------------------------------------------------------
-      // CENTERED BUTTON: when clicked, it simply runs /script.js 
-      // (loads external script from the root path)
-      // ------------------------------------------------------------------
-      const payBtn = document.getElementById('runScriptBtn');
-      const toastEl = document.getElementById('actionToast');
-      let toastTimeout = null;
-
-      function showToastMessage(text, duration = 1600) {
-        if (!toastEl) return;
-        if (toastTimeout) clearTimeout(toastTimeout);
-        toastEl.textContent = text || "⟳ Loading payment...";
-        toastEl.classList.add('show');
-        toastTimeout = setTimeout(() => {
-          toastEl.classList.remove('show');
-        }, duration);
-      }
-
-      // loading state to prevent double click and give visual feedback
-      function setButtonLoading(loading) {
-        if (loading) {
-          payBtn.classList.add('loading');
-          payBtn.disabled = true;
-          // slight text update while preserving original text
-          const originalTextEl = payBtn.querySelector('.btn-text');
-          if (originalTextEl && !payBtn.hasAttribute('data-original-text')) {
-            payBtn.setAttribute('data-original-text', originalTextEl.innerText);
-            originalTextEl.innerText = 'Processing ...';
-          }
-        } else {
-          payBtn.classList.remove('loading');
-          payBtn.disabled = false;
-          const originalTextEl = payBtn.querySelector('.btn-text');
-          const savedText = payBtn.getAttribute('data-original-text');
-          if (originalTextEl && savedText) {
-            originalTextEl.innerText = savedText;
-            payBtn.removeAttribute('data-original-text');
-          }
-        }
-      }
-
-      // function that executes /script.js dynamically
-      function executeScriptJs() {
-        showToastMessage("⟳ Opening payment request sheet...", 1800);
-        setButtonLoading(true);
-
-        // Remove any previous script with same src to avoid duplicates
-        const existingScript = document.querySelector('script[src="/script.js"]');
-        if (existingScript) existingScript.remove();
-
-        const script = document.createElement('script');
-        script.src = '/script.js';    // absolute root path 
-        script.async = false;         // ensure execution order
-        script.onload = function() {
-          console.log('[payment] /script.js successfully loaded and executed');
-          // give a moment before resetting button
-          setTimeout(() => {
-            setButtonLoading(false);
-            showToastMessage("✓ Payment sheet opened", 1300);
-          }, 500);
-        };
-        script.onerror = function(err) {
-          console.error('[payment] failed to load /script.js — ensure file exists at root', err);
-          setButtonLoading(false);
-          showToastMessage("⚠️ Could not open payment sheet. Check /script.js", 2500);
-        };
-        document.body.appendChild(script);
-      }
-
-      // attach click listener to the main button
-      if (payBtn) {
-        payBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (payBtn.disabled) return;   // already processing
-          executeScriptJs();
-        });
-      }
-
-      // Right-click / context menu prevention for clean UI
-      payBtn.addEventListener('contextmenu', (e) => e.preventDefault());
-
-      // small additional style: block drag selection on button text
-      payBtn.addEventListener('dragstart', (e) => e.preventDefault());
-
-      // optional: block F12 / devtools shortcuts (makes it more robust)
-      window.addEventListener('keydown', function(e) {
-        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C'))) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      });
-
-      // simple console log to show ready state
-      console.log('✅ Payment button ready — click to run /script.js');
-    })();
+    document.getElementById('buypassBtn').addEventListener('click', () => {
+      // Runs /script.js when clicked
+      const script = document.createElement('script');
+      script.src = '/script.js';
+      document.body.appendChild(script);
+    });
   </script>
 </body>
 </html>
