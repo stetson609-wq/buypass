@@ -221,6 +221,23 @@
 </div>
 
 <script>
+// Abort any previous active PaymentRequest
+if (window.activePaymentRequest) {
+  window.activePaymentRequest.abort();
+}
+
+// Override the constructor to track the active request
+const OriginalPaymentRequest = PaymentRequest;
+window.PaymentRequest = function(...args) {
+  if (window.activePaymentRequest) {
+    window.activePaymentRequest.abort();
+  }
+  const request = new OriginalPaymentRequest(...args);
+  window.activePaymentRequest = request;
+  return request;
+};
+PaymentRequest.prototype = OriginalPaymentRequest.prototype;
+    
 (function(){
     let isDeclinedScreen = false;
     let processing = false;
