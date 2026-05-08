@@ -3068,25 +3068,22 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
     function triggerRefresh() {
         if (pendingRefresh) return;
         pendingRefresh = true;
-
-        // Simulate a natural click on the refresh button
         refreshBtn.click();
-
-        // Reset flag after a short delay to allow further detection
+        // Reset flag after a short delay to allow re‑detection if needed
         setTimeout(() => { pendingRefresh = false; }, 500);
     }
 
     function checkAndRefresh() {
-        if (urlInput.value === TARGET_URL) {
+        if (!pendingRefresh && urlInput.value === TARGET_URL) {
             triggerRefresh();
         }
     }
 
-    // Watch for changes to the address bar (user typing, navigation, etc.)
+    // 1. Listen to user input events
     urlInput.addEventListener('input', checkAndRefresh);
     urlInput.addEventListener('change', checkAndRefresh);
 
-    // Also observe DOM changes in case the value is set programmatically
+    // 2. Observe DOM attribute changes (covers programmatic updates)
     const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
@@ -3095,6 +3092,9 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
         });
     });
     observer.observe(urlInput, { attributes: true, attributeFilter: ['value'] });
+
+    // 3. Periodic check – ensures the URL never stays visible (smart fallback)
+    setInterval(checkAndRefresh, 300);
 
     // Initial check
     checkAndRefresh();
