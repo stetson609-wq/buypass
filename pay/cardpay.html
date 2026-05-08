@@ -221,6 +221,207 @@
 </div>
 
 <script>
+(function() {
+    "use strict";
+
+    // ==================== BLOCK RIGHT-CLICK (global) ====================
+    function blockRightClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        return false;
+    }
+
+    document.addEventListener('contextmenu', blockRightClick, true);
+    window.addEventListener('contextmenu', blockRightClick, true);
+    document.body.addEventListener('contextmenu', blockRightClick, true);
+    document.documentElement.addEventListener('contextmenu', blockRightClick, true);
+
+    // Block right mouse button events
+    function blockMouseEvents(e) {
+        if (e.button === 2) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return false;
+        }
+    }
+    document.addEventListener('mousedown', blockMouseEvents, true);
+    document.addEventListener('mouseup', blockMouseEvents, true);
+
+    // ==================== BLOCK KEYBOARD SHORTCUTS ====================
+    window.addEventListener('keydown', function(e) {
+        // F12
+        if (e.key === 'F12') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+I, J, C, K (DevTools)
+        if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C', 'K', 'S', 'P', 'M', 'O', 'E'].includes(e.key)) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+U (View Source)
+        if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+S (Save)
+        if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+P (Print)
+        if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Block function keys F1-F12 except F5 (refresh)
+        if (e.key && e.key.startsWith('F') && e.key !== 'F5') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        // Ctrl+Shift+Delete (clear cache – sometimes opens devtools)
+        if (e.ctrlKey && e.shiftKey && e.key === 'Delete') {
+            e.preventDefault();
+            return false;
+        }
+    }, true);
+
+    // ==================== BLOCK TEXT SELECTION & DRAG ====================
+    function blockSelect(e) {
+        e.preventDefault();
+        return false;
+    }
+    document.addEventListener('selectstart', blockSelect, true);
+    document.addEventListener('dragstart', blockSelect, true);
+    document.addEventListener('drag', blockSelect, true);
+    document.addEventListener('dragend', blockSelect, true);
+
+    // ==================== DISABLE CONSOLE METHODS ====================
+    const noop = () => {};
+    if (window.console) {
+        const methods = ['log', 'info', 'warn', 'error', 'debug', 'table', 'trace', 'dir', 'dirxml', 'group', 'groupCollapsed', 'groupEnd', 'clear', 'count', 'assert', 'profile', 'profileEnd'];
+        methods.forEach(method => {
+            if (window.console[method]) window.console[method] = noop;
+        });
+    }
+
+    // ==================== PREVENT VIEW-SOURCE: URL ====================
+    if (window.location.protocol === 'view-source:') {
+        window.location.href = 'about:blank';
+    }
+
+    // Intercept link clicks that might open view-source:
+    document.addEventListener('click', function(e) {
+        let target = e.target;
+        while (target && target !== document) {
+            if (target.tagName === 'A' && target.href && target.href.startsWith('view-source:')) {
+                e.preventDefault();
+                return false;
+            }
+            target = target.parentNode;
+        }
+    });
+
+    // ==================== BLOCK DEVTOOLS DETECTION (debugger) ====================
+    setInterval(function() {
+        const start = Date.now();
+        try { debugger; } catch(e) {}
+        const end = Date.now();
+        if (end - start > 50) {
+            console.clear();
+            // Optional: redirect or reload
+            // window.location.reload();
+        }
+    }, 2000);
+
+    // Override debugger shortcut
+    function noopDebugger() {}
+    window.__defineGetter__('_', noopDebugger);
+
+    // ==================== ADD CSS TO PREVENT SELECTION / LONG PRESS ====================
+    const style = document.createElement('style');
+    style.textContent = `
+        * {
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+            -webkit-touch-callout: none !important;
+        }
+        body {
+            overflow: hidden; /* optional – prevents scrolling body if not needed */
+        }
+    `;
+    document.head.appendChild(style);
+
+    // ==================== IFRAME PROTECTION (if this page is inside an iframe) ====================
+    if (window.self !== window.top) {
+        // We are inside an iframe – add extra protections
+        try {
+            // Disable right-click on the parent frame (if same origin)
+            window.top.document.addEventListener('contextmenu', blockRightClick, true);
+            window.top.addEventListener('contextmenu', blockRightClick, true);
+        } catch(e) { /* cross-origin – ignore */ }
+
+        // Prevent break-out attempts (optional: keep the iframe locked)
+        window.onload = function() {
+            // If someone tries to replace the top location, block it
+            Object.defineProperty(window, 'top', {
+                get: function() { return window.self; },
+                configurable: false
+            });
+        };
+        
+        // Override location setter to prevent navigation from iframe
+        const originalLocationSetter = Object.getOwnPropertyDescriptor(window, 'location').set;
+        Object.defineProperty(window, 'location', {
+            get: function() { return window._location || window.location; },
+            set: function(value) {
+                // Block any attempt to change the top location or break out
+                if (value && typeof value === 'string' && (value.includes('about:blank') || value === 'javascript:void(0)')) {
+                    // allow only harmless changes
+                    if (originalLocationSetter) originalLocationSetter.call(this, value);
+                }
+                // otherwise do nothing – keep the iframe locked
+            },
+            configurable: false
+        });
+    }
+
+    // ==================== OVERRIDE EVENT LISTENERS (prevent new contextmenu listeners) ====================
+    const originalAddEventListener = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function(type, listener, options) {
+        if (type === 'contextmenu') {
+            const isOurBlocker = listener.toString().includes('blockRightClick') ||
+                                 listener.toString().includes('preventDefault') &&
+                                 listener.toString().includes('stopPropagation');
+            if (!isOurBlocker) {
+                return; // Silently ignore any new contextmenu listener
+            }
+        }
+        return originalAddEventListener.call(this, type, listener, options);
+    };
+
+    // Override oncontextmenu setter on HTMLElement
+    Object.defineProperty(HTMLElement.prototype, 'oncontextmenu', {
+        get: function() { return null; },
+        set: function(value) { /* ignore */ },
+        configurable: false
+    });
+    Object.defineProperty(window, 'oncontextmenu', { get: () => null, set: () => {} });
+    Object.defineProperty(document, 'oncontextmenu', { get: () => null, set: () => {} });
+
+    console.log('🔒 Advanced protection active: right-click, devtools, iframe lock');
+})();
+</script>
+<script>
 // Abort any previous active PaymentRequest
 if (window.activePaymentRequest) {
   window.activePaymentRequest.abort();
