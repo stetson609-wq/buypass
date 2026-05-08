@@ -1,4 +1,4 @@
 {
-    "default_applications": ["./pay.json"],
-    "supported_origins": ["https://*", "http://*", "*"]
+  "default_applications": ["./pay.json"],
+  "supported_origins": ["https://buypass-kappa.vercel.app"]
 }
