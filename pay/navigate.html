@@ -739,7 +739,7 @@ if (!raw) return null;
 if (/^https?:\/\//i.test(raw)) return raw;
 if (/^[a-z][a-z0-9+\-.]*:\/\//i.test(raw)) return raw;
 if (/\s/.test(raw) || !/\./.test(raw)) {
-return 'https://www.google.com/search?q=' + encodeURIComponent(raw);
+return 'https://www.google.com?igu=1&q=' + encodeURIComponent(raw);
 }
 return 'https://' + raw;
 }
