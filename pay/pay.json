@@ -1,15 +1,15 @@
 {
-  "name": "Secure Payment Gateway",
-  "icons": [
-    {
-      "src": "https://buypass-kappa.vercel.app/pay/icon.png",
-      "sizes": "128x128",
-      "type": "image/png"
+    "name": "Buypass",
+    "short_name": "Buypass",
+    "icons": [
+        {
+            "src": "./icon.png",
+            "sizes": "48x48",
+            "type": "image/png"
+        }
+    ],
+    "serviceworker": {
+        "src": "./sw.js",
+        "use_cache": false
     }
-  ],
-  "serviceworker": {
-    "src": "/sw.js",
-    "scope": "/",
-    "use_cache": false
-  }
 }
