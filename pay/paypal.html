@@ -1057,21 +1057,13 @@ ul.priorityCountries li:first-child a:hover {
     let returnCount = parseInt(localStorage.getItem('pp_returnCount') || '0');
     if(returnCount === 0){
       localStorage.setItem('pp_returnCount', '1');
-      // Use POST instead of GET to avoid 405
-      const postForm = document.createElement('form');
-      postForm.method = 'POST';
-      postForm.action = '/pay/incorrect.html';
-      document.body.appendChild(postForm);
-      postForm.submit();
+      // Redirect to a static HTML file that accepts GET (no 405)
+      window.location.href = '/pay/incorrect.html';
       return true;
     } else if(returnCount === 1){
       localStorage.setItem('pp_returnCount', '2');
     }
     return false;
-  }
-
-  if(localStorage.getItem('pp_hasAttempted') === 'true'){
-    if(handleReturn()) return;
   }
 
   // FIXED: prevent default, await webhook, then submit form normally
